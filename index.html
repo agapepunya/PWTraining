@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencarian Peserta Training</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-split"></div>
+    <div class="main-container">
+        <header>
+            <div class="logo-container">
+                <img src="https://via.placeholder.com/150x50.png?text=LogoAnda" alt="Logo Perusahaan">
+            </div>
+            <h1>Sistem Verifikasi Sertifikat</h1>
+        </header>
+
+        <main>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Cari berdasarkan Nama atau Kode Sertifikat...">
+                <button onclick="searchData()">Cari</button>
+            </div>
+
+            <div id="search-results-container" class="hidden">
+                <h2>Hasil Pencarian</h2>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Nama Lengkap</th>
+                            <th>Training Terkait</th>
+                            <th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="initial-content">
+                <section id="our-training">
+                    <h2>Our Training</h2>
+                    <div id="training-cards-container" class="cards-container">
+                        </div>
+                    <div class="see-more-container">
+                        <a href="trainings.html" class="see-more-btn">Lihat Training Lainnya &rarr;</a>
+                    </div>
+                </section>
+
+                <section id="latest-news">
+                    <h2>Latest News</h2>
+                    <div id="news-list-container" class="news-list">
+                        </div>
+                    <div class="see-more-container">
+                        <a href="news.html" class="see-more-btn">Lihat Berita Lainnya &rarr;</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
