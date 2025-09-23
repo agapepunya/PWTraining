@@ -299,4 +299,39 @@ footer {
     color: white;
     text-decoration: none;
     border-radius: 5px;
+
+}
+
+.news-item {
+    display: flex; /* Menggunakan flexbox untuk layout gambar dan teks */
+    gap: 15px; /* Jarak antara gambar dan teks */
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 15px;
+    align-items: flex-start; /* Sejajarkan item ke atas */
+}
+
+.news-item img {
+    width: 120px; /* Ukuran gambar berita */
+    height: 90px;
+    object-fit: cover;
+    border-radius: 5px;
+    flex-shrink: 0; /* Mencegah gambar menyusut */
+}
+
+.news-item-content {
+    flex-grow: 1; /* Konten teks akan mengisi sisa ruang */
+}
+
+.news-item h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.news-item p {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    line-height: 1.4;
 }
