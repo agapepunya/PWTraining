@@ -32,7 +32,7 @@ function loadInitialData() {
             const trainingContainer = document.getElementById('training-cards-container');
             const newsContainer = document.getElementById('news-list-container');
 
-            // Muat Kartu Training
+            // Muat Kartu Training (Tidak ada perubahan di sini jika sudah berfungsi)
             data.trainings.forEach(training => {
                 const card = `
                     <div class="card">
@@ -45,13 +45,17 @@ function loadInitialData() {
                 trainingContainer.innerHTML += card;
             });
 
-            // Muat Daftar Berita
+            // Muat Daftar Berita (Disesuaikan untuk gambar)
+            newsContainer.innerHTML = ''; // Pastikan container kosong sebelum mengisi
             data.news.forEach(news => {
                 const item = `
                     <div class="news-item">
-                        <h3>${news.JudulBerita}</h3>
-                        <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
-                        <p>${news.IsiBerita.substring(0, 150)}...</p>
+                        <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
+                        <div class="news-item-content">
+                            <h3>${news.JudulBerita}</h3>
+                            <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
+                            <p>${news.IsiBerita.substring(0, 150)}...</p>
+                        </div>
                     </div>`;
                 newsContainer.innerHTML += item;
             });
@@ -184,9 +188,12 @@ function loadAllNews() {
             data.forEach(news => {
                 const item = `
                     <div class="news-item" data-title="${news.JudulBerita.toLowerCase()}">
-                        <h3>${news.JudulBerita}</h3>
-                        <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
-                        <p>${news.IsiBerita}</p>
+                        <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
+                        <div class="news-item-content">
+                            <h3>${news.JudulBerita}</h3>
+                            <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
+                            <p>${news.IsiBerita}</p>
+                        </div>
                     </div>`;
                 container.innerHTML += item;
             });
@@ -249,4 +256,5 @@ function injectFooter() {
     footers.forEach(footer => {
         footer.innerHTML = footerHTML;
     });
+
 }
