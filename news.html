@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semua Berita</title>
+    <title>Berita Terkini - Nama Website Anda</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="background-split"></div>
-    <div class="main-container">
+    <div class="background-container">
         <header>
-            <div class="logo-container">
-                <img src="https://via.placeholder.com/150x50.png?text=LogoAnda" alt="Logo Perusahaan">
-            </div>
-            <h1>Berita Terkini</h1>
+            <div class="logo">LOGO</div>
+            <h1>Judul Website Anda</h1>
         </header>
-        <main>
-            <div class="search-container">
-                <input type="text" id="newsSearchInput" placeholder="Cari berita...">
-            </div>
-            <div id="all-news-container" class="news-list">
-                </div>
-        </main>
+        <div class="search-container">
+            <input type="text" id="searchNewsInput" class="search-box" placeholder="Cari berita...">
+        </div>
     </div>
+
+    <main id="allNewsPage">
+        <section class="content-section">
+            <h2>Berita Terkini</h2>
+            <div id="newsContainer" class="news-list-container">
+                </div>
+        </section>
+    </main>
+    
     <footer>
         </footer>
+
     <script src="script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', loadAllNews);
-    </script>
 </body>
 </html>

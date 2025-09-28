@@ -3,25 +3,50 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz64E_HloYJ8iRTvDBGm
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Jalankan fungsi hanya jika elemen yang relevan ada di halaman saat ini
-    if (document.getElementById('training-cards-container')) {
-        loadInitialData();
-    }
+// document.addEventListener('DOMContentLoaded', () => {
+//     // Jalankan fungsi hanya jika elemen yang relevan ada di halaman saat ini
+//     if (document.getElementById('training-cards-container')) {
+//         loadInitialData();
+//     }
     
-    // Tambahkan footer ke setiap halaman
-    injectFooter();
+//     // Tambahkan footer ke setiap halaman
+//     injectFooter();
 
-    // Tambahkan event listener untuk input pencarian jika ada
-    const trainingSearchInput = document.getElementById('trainingSearchInput');
-    if (trainingSearchInput) {
-        trainingSearchInput.addEventListener('keyup', filterTrainings);
-    }
+//     // Tambahkan event listener untuk input pencarian jika ada
+//     const trainingSearchInput = document.getElementById('trainingSearchInput');
+//     if (trainingSearchInput) {
+//         trainingSearchInput.addEventListener('keyup', filterTrainings);
+//     }
     
-    const newsSearchInput = document.getElementById('newsSearchInput');
-    if (newsSearchInput) {
-        newsSearchInput.addEventListener('keyup', filterNews);
+//     const newsSearchInput = document.getElementById('newsSearchInput');
+//     if (newsSearchInput) {
+//         newsSearchInput.addEventListener('keyup', filterNews);
+//     }
+// });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Logika untuk Halaman Utama (index.html)
+    if (document.getElementById('latestNews')) {
+        loadNews(3); // Memuat 3 berita
     }
+
+    // Logika untuk halaman semua berita (berita.html)
+    if (document.getElementById('allNewsPage')) {
+        loadNews(); // Memuat SEMUA berita
+    }
+
+    // ... Sisa kode Anda untuk training, pencarian, footer, dll.
+    if (document.getElementById('ourTraining')) {
+        loadTraining(3);
+    }
+    if (document.getElementById('allTrainingPage')) {
+        loadTraining(); 
+    }
+    if (document.getElementById('searchInput')) {
+        document.getElementById('searchInput').addEventListener('keyup', handleSearch);
+    }
+    generateFooter();
 });
 
 // Fungsi untuk memuat data awal di Halaman Utama
@@ -153,52 +178,111 @@ function loadParticipantDetails() {
 
 
 // Fungsi untuk memuat semua training di halaman trainings.html
-function loadAllTrainings() {
-    const container = document.getElementById('all-trainings-container');
-    container.innerHTML = '<p>Memuat data training...</p>';
-    fetch(`${SCRIPT_URL}?action=getAllTrainings`)
-        .then(response => response.json())
-        .then(data => {
-            container.innerHTML = '';
-            data.forEach(training => {
-                const card = `
-                    <div class="card training-card" data-title="${training.NamaTraining.toLowerCase()}">
-                        <img src="${training.URL_Gambar_Training}" alt="${training.NamaTraining}">
-                        <div class="card-content">
-                            <h3>${training.NamaTraining}</h3>
-                            <p>${training.Deskripsi}</p>
-                        </div>
-                    </div>`;
-                container.innerHTML += card;
-            });
-        })
-        .catch(error => console.error('Error fetching all trainings:', error));
+// function loadAllTrainings() {
+//     const container = document.getElementById('all-trainings-container');
+//     container.innerHTML = '<p>Memuat data training...</p>';
+//     fetch(`${SCRIPT_URL}?action=getAllTrainings`)
+//         .then(response => response.json())
+//         .then(data => {
+//             container.innerHTML = '';
+//             data.forEach(training => {
+//                 const card = `
+//                     <div class="card training-card" data-title="${training.NamaTraining.toLowerCase()}">
+//                         <img src="${training.URL_Gambar_Training}" alt="${training.NamaTraining}">
+//                         <div class="card-content">
+//                             <h3>${training.NamaTraining}</h3>
+//                             <p>${training.Deskripsi}</p>
+//                         </div>
+//                     </div>`;
+//                 container.innerHTML += card;
+//             });
+//         })
+//         .catch(error => console.error('Error fetching all trainings:', error));
+// }
+/**
+ * Fungsi serbaguna untuk memuat data training.
+ * @param {number|null} limit - Jumlah item yang ingin ditampilkan. Jika null, tampilkan semua.
+ */
+async function loadTraining(limit = null) {
+    // Ganti 'trainingContainer' dengan ID container yang sesuai di halaman Anda
+    const container = document.getElementById('trainingContainer') || document.getElementById('allTrainingContainer');
+    if (!container) return; // Hentikan jika container tidak ditemukan
+
+    container.innerHTML = 'Memuat data training...'; // Tampilkan pesan loading
+
+    const trainingData = await fetchData("getTraining");
+
+    // Cek apakah data berhasil diambil
+    if (!trainingData || trainingData.length === 0) {
+        container.innerHTML = '<p>Belum ada data training yang tersedia.</p>';
+        return;
+    }
+
+    // Tentukan data mana yang akan ditampilkan berdasarkan limit
+    const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
+
+    container.innerHTML = ''; // Kosongkan container sebelum mengisi dengan data baru
+    itemsToDisplay.forEach(item => {
+        container.innerHTML += `
+            <div class="card">
+                <img src="${item.thumbnail}" alt="${item.nama_training}" style="width:100%; height:150px; object-fit:cover;">
+                <h3>${item.nama_training}</h3>
+                <p>${item.deskripsi}</p>
+            </div>
+        `;
+    });
 }
 
 
 // Fungsi untuk memuat semua berita di halaman news.html
-function loadAllNews() {
-    const container = document.getElementById('all-news-container');
-    container.innerHTML = '<p>Memuat berita...</p>';
-    fetch(`${SCRIPT_URL}?action=getAllNews`)
-        .then(response => response.json())
-        .then(data => {
-            container.innerHTML = '';
-             data.sort((a, b) => new Date(b.TanggalPublikasi) - new Date(a.TanggalPublikasi));
-            data.forEach(news => {
-                const item = `
-                    <div class="news-item" data-title="${news.JudulBerita.toLowerCase()}">
-                        <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
-                        <div class="news-item-content">
-                            <h3>${news.JudulBerita}</h3>
-                            <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
-                            <p>${news.IsiBerita}</p>
-                        </div>
-                    </div>`;
-                container.innerHTML += item;
-            });
-        })
-        .catch(error => console.error('Error fetching all news:', error));
+// function loadAllNews() {
+//     const container = document.getElementById('all-news-container');
+//     container.innerHTML = '<p>Memuat berita...</p>';
+//     fetch(`${SCRIPT_URL}?action=getAllNews`)
+//         .then(response => response.json())
+//         .then(data => {
+//             container.innerHTML = '';
+//              data.sort((a, b) => new Date(b.TanggalPublikasi) - new Date(a.TanggalPublikasi));
+//             data.forEach(news => {
+//                 const item = `
+//                     <div class="news-item" data-title="${news.JudulBerita.toLowerCase()}">
+//                         <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
+//                         <div class="news-item-content">
+//                             <h3>${news.JudulBerita}</h3>
+//                             <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
+//                             <p>${news.IsiBerita}</p>
+//                         </div>
+//                     </div>`;
+//                 container.innerHTML += item;
+//             });
+//         })
+//         .catch(error => console.error('Error fetching all news:', error));
+// }
+
+async function loadNews(limit = null) {
+    const container = document.getElementById('newsContainer');
+    if (!container) return; 
+
+    container.innerHTML = 'Memuat berita...';
+    const newsData = await fetchData("getBerita");
+
+    if (!newsData || newsData.length === 0) {
+        container.innerHTML = '<p>Belum ada berita yang tersedia.</p>';
+        return;
+    }
+
+    const itemsToDisplay = limit ? newsData.slice(0, limit) : newsData;
+
+    container.innerHTML = '';
+    itemsToDisplay.forEach(item => {
+        container.innerHTML += `
+            <div class="news-item">
+                <h4>${item.judul_berita}</h4>
+                <p>${item.ringkasan}</p>
+                <small>Dipublikasikan pada: ${item.tanggal_publikasi}</small>
+            </div>
+        `;
+    });
 }
 
 // Fungsi filter untuk pencarian di halaman training
