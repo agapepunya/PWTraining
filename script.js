@@ -102,7 +102,7 @@ function searchData() {
 }
 
 
-// Fungsi untuk memuat detail peserta
+
 function loadParticipantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const participantId = urlParams.get('id');
@@ -123,7 +123,6 @@ function loadParticipantDetails() {
                 return;
             }
 
-            // PERUBAHAN DI SINI: Menambahkan elemen untuk email dan telepon
             let content = `
                 <div class="participant-header">
                     <img src="${data.url_foto_profil}" alt="Foto Profil">
@@ -147,7 +146,7 @@ function loadParticipantDetails() {
                         </div>
                         <div class="pdf-preview">
                             <h4>Sertifikat (PDF):</h4>
-                            <iframe src="${training.url_pdf}"></iframe>
+                            <iframe src="${training.url_pdf}" height="400"></iframe>
                             <a href="${training.url_pdf}" target="_blank">Download/Lihat Fullscreen</a>
                         </div>
                     </div>`;
@@ -160,7 +159,6 @@ function loadParticipantDetails() {
         });
 }
 
-// Fungsi untuk memuat data training
 async function loadTraining(limit = null) {
     const container = document.getElementById('trainingContainer');
     if (!container) return;
@@ -177,6 +175,8 @@ async function loadTraining(limit = null) {
 
     container.innerHTML = ''; // Kosongkan container
     itemsToDisplay.forEach(item => {
+        // Pastikan properti di sini (item.thumbnail, item.namatraining, dll.)
+        // cocok dengan nama header di sheet Anda (setelah diubah ke huruf kecil)
         container.innerHTML += `
             <div class="card" data-title="${item.namatraining.toLowerCase()}">
                 <img src="${item.thumbnail}" alt="${item.namatraining}" style="width:100%; height:180px; object-fit:cover;">
@@ -189,8 +189,6 @@ async function loadTraining(limit = null) {
     });
 }
 
-
-// Fungsi untuk memuat data berita
 async function loadNews(limit = null) {
     const container = document.getElementById('newsContainer');
     if (!container) return;
@@ -207,7 +205,14 @@ async function loadNews(limit = null) {
 
     container.innerHTML = '';
     itemsToDisplay.forEach(item => {
-        const tgl = new Date(item.tanggalpublikasi).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' });
+        // Format tanggal agar lebih mudah dibaca
+        const tgl = new Date(item.tanggalpublikasi).toLocaleDateString("id-ID", {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Pastikan properti "item.url_gambar_berita" digunakan di sini
         container.innerHTML += `
             <div class="news-item" data-title="${item.judulberita.toLowerCase()}">
                  <img src="${item.url_gambar_berita}" alt="${item.judulberita}">
@@ -243,21 +248,13 @@ function injectFooter() {
     <div class="footer-content">
         <div class="footer-section about">
             <h4>Informasi Kontak</h4>
-            <p><strong>Alamat:</strong> Jl. Contoh No. 123, Jakarta, Indonesia</p>
-            <p><strong>Email:</strong> info@perusahaan.com</p>
-            <p><strong>Telepon:</strong> (021) 123-4567</p>
-        </div>
-        <div class="footer-section contact-form">
-            <h4>Kirim Pesan</h4>
-            <form action="#" method="POST">
-                <input type="email" name="email" placeholder="Email Anda...">
-                <textarea name="message" rows="4" placeholder="Pesan Anda..."></textarea>
-                <button type="submit">Kirim</button>
-            </form>
+            <p><strong>Alamat:</strong> Ruko gardenia, Blk. RF, Jl. Gardenia Raya No.09, RT.005/RW.002, Bojong Rawalumbu, Rawa Lumbu, Bekasi, West Java 17116</p>
+            <p><strong>Email:</strong>sales@proworker.co.id</p>
+            <p><strong>Telepon:</strong> +62 857 9775 7809</p>
         </div>
         <div class="footer-section links">
-            <h4>Hubungi Kami</h4>
-            <a href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20dengan%20training%20Anda." class="whatsapp-btn" target="_blank">Hubungi via WhatsApp</a>
+            <h4>Hubungi Whatsapp Kami</h4>
+            <a href="https://wa.me/6287779104041?text=Halo,%20saya%20tertarik%20dengan%20training%20Anda." class="whatsapp-btn" target="_blank">Hubungi via WhatsApp</a>
         </div>
     </div>`;
     const footers = document.querySelectorAll('footer');
