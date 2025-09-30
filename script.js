@@ -1,94 +1,67 @@
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz64E_HloYJ8iRTvDBGm5yAAtFBIGZjI_H0gZ9NWTFU-nw7V63Xt1BtRJ1f8elYrw/exec"; 
 
-
-
-// document.addEventListener('DOMContentLoaded', () => {
-//     // Jalankan fungsi hanya jika elemen yang relevan ada di halaman saat ini
-//     if (document.getElementById('training-cards-container')) {
-//         loadInitialData();
-//     }
-    
-//     // Tambahkan footer ke setiap halaman
-//     injectFooter();
-
-//     // Tambahkan event listener untuk input pencarian jika ada
-//     const trainingSearchInput = document.getElementById('trainingSearchInput');
-//     if (trainingSearchInput) {
-//         trainingSearchInput.addEventListener('keyup', filterTrainings);
-//     }
-    
-//     const newsSearchInput = document.getElementById('newsSearchInput');
-//     if (newsSearchInput) {
-//         newsSearchInput.addEventListener('keyup', filterNews);
-//     }
-// });
-
 document.addEventListener("DOMContentLoaded", () => {
-
     // Logika untuk Halaman Utama (index.html)
+    if (document.getElementById('ourTraining')) {
+        loadTraining(3); // Memuat 3 training terbaru
+    }
     if (document.getElementById('latestNews')) {
-        loadNews(3); // Memuat 3 berita
+        loadNews(3); // Memuat 3 berita terbaru
     }
 
-    // Logika untuk halaman semua berita (berita.html)
+    // Logika untuk halaman semua training (trainings.html)
+    if (document.getElementById('allTrainingPage')) {
+        loadTraining(); // Memuat SEMUA training
+    }
+
+    // Logika untuk halaman semua berita (news.html)
     if (document.getElementById('allNewsPage')) {
         loadNews(); // Memuat SEMUA berita
     }
+    
+    // Logika untuk halaman detail
+    if (document.getElementById('detail-content')) {
+        loadParticipantDetails();
+    }
 
-    // ... Sisa kode Anda untuk training, pencarian, footer, dll.
-    if (document.getElementById('ourTraining')) {
-        loadTraining(3);
+    // Event listener untuk pencarian di halaman utama
+    const searchButton = document.querySelector('.search-container button');
+    if (searchButton && searchButton.onclick === null) { // Cek jika onclick belum diatur di HTML
+         searchButton.addEventListener('click', searchData);
     }
-    if (document.getElementById('allTrainingPage')) {
-        loadTraining(); 
+    
+    // Event listener untuk filter di halaman training
+    const trainingSearchInput = document.getElementById('trainingSearchInput');
+    if (trainingSearchInput) {
+        trainingSearchInput.addEventListener('keyup', filterItems);
     }
-    if (document.getElementById('searchInput')) {
-        document.getElementById('searchInput').addEventListener('keyup', handleSearch);
+
+    // Event listener untuk filter di halaman berita
+    const newsSearchInput = document.getElementById('newsSearchInput');
+    if (newsSearchInput) {
+        newsSearchInput.addEventListener('keyup', filterItems);
     }
-    generateFooter();
+
+    // Selalu tambahkan footer di setiap halaman
+    injectFooter();
 });
 
-// Fungsi untuk memuat data awal di Halaman Utama
-function loadInitialData() {
-    fetch(`${SCRIPT_URL}?action=getInitialData`)
-        .then(response => response.json())
-        .then(data => {
-            const trainingContainer = document.getElementById('training-cards-container');
-            const newsContainer = document.getElementById('news-list-container');
-
-            // Muat Kartu Training (Tidak ada perubahan di sini jika sudah berfungsi)
-            data.trainings.forEach(training => {
-                const card = `
-                    <div class="card">
-                        <img src="${training.URL_Gambar_Training}" alt="${training.NamaTraining}">
-                        <div class="card-content">
-                            <h3>${training.NamaTraining}</h3>
-                            <p>${training.Deskripsi.substring(0, 100)}...</p>
-                        </div>
-                    </div>`;
-                trainingContainer.innerHTML += card;
-            });
-
-            // Muat Daftar Berita (Disesuaikan untuk gambar)
-            newsContainer.innerHTML = ''; // Pastikan container kosong sebelum mengisi
-            data.news.forEach(news => {
-                const item = `
-                    <div class="news-item">
-                        <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
-                        <div class="news-item-content">
-                            <h3>${news.JudulBerita}</h3>
-                            <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
-                            <p>${news.IsiBerita.substring(0, 150)}...</p>
-                        </div>
-                    </div>`;
-                newsContainer.innerHTML += item;
-            });
-        })
-        .catch(error => console.error('Error fetching initial data:', error));
+// Fungsi terpusat untuk fetch data
+async function fetchData(action) {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=${action}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(`Error fetching ${action}:`, error);
+        return []; // Kembalikan array kosong jika error
+    }
 }
 
-// Fungsi untuk melakukan pencarian
+// Fungsi untuk melakukan pencarian peserta
 function searchData() {
     const query = document.getElementById('searchInput').value;
     if (query.length < 3) {
@@ -128,31 +101,40 @@ function searchData() {
         });
 }
 
-// Fungsi untuk memuat detail peserta di halaman detail.html
+
+// Fungsi untuk memuat detail peserta
 function loadParticipantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const participantId = urlParams.get('id');
+    const container = document.getElementById('participant-details-container');
 
     if (!participantId) {
-        document.getElementById('participant-details-container').innerHTML = '<p>ID Peserta tidak valid.</p>';
+        container.innerHTML = '<p>ID Peserta tidak valid.</p>';
         return;
     }
+    
+    container.innerHTML = '<p>Memuat detail peserta...</p>';
 
     fetch(`${SCRIPT_URL}?action=getParticipantDetails&id=${participantId}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                document.getElementById('participant-details-container').innerHTML = `<p>${data.error}</p>`;
+                container.innerHTML = `<p>${data.error}</p>`;
                 return;
             }
 
-            const container = document.getElementById('participant-details-container');
+            // PERUBAHAN DI SINI: Menambahkan elemen untuk email dan telepon
             let content = `
                 <div class="participant-header">
                     <img src="${data.url_foto_profil}" alt="Foto Profil">
-                    <h2>${data.nama_lengkap}</h2>
-                </div>
-            `;
+                    <div class="participant-info">
+                        <h2>${data.nama_lengkap}</h2>
+                        <div class="participant-contact">
+                            ${data.email && data.email !== 'N/A' ? `<p><strong>Email:</strong> ${data.email}</p>` : ''}
+                            ${data.telepon && data.telepon !== 'N/A' ? `<p><strong>Telepon:</strong> ${data.telepon}</p>` : ''}
+                        </div>
+                    </div>
+                </div>`;
 
             data.trainings.forEach((training, index) => {
                 content += `
@@ -170,100 +152,50 @@ function loadParticipantDetails() {
                         </div>
                     </div>`;
             });
-
             container.innerHTML = content;
         })
-        .catch(error => console.error('Error fetching participant details:', error));
+        .catch(error => {
+            console.error('Error fetching participant details:', error);
+            container.innerHTML = '<p>Gagal memuat detail peserta.</p>';
+        });
 }
 
-
-// Fungsi untuk memuat semua training di halaman trainings.html
-// function loadAllTrainings() {
-//     const container = document.getElementById('all-trainings-container');
-//     container.innerHTML = '<p>Memuat data training...</p>';
-//     fetch(`${SCRIPT_URL}?action=getAllTrainings`)
-//         .then(response => response.json())
-//         .then(data => {
-//             container.innerHTML = '';
-//             data.forEach(training => {
-//                 const card = `
-//                     <div class="card training-card" data-title="${training.NamaTraining.toLowerCase()}">
-//                         <img src="${training.URL_Gambar_Training}" alt="${training.NamaTraining}">
-//                         <div class="card-content">
-//                             <h3>${training.NamaTraining}</h3>
-//                             <p>${training.Deskripsi}</p>
-//                         </div>
-//                     </div>`;
-//                 container.innerHTML += card;
-//             });
-//         })
-//         .catch(error => console.error('Error fetching all trainings:', error));
-// }
-/**
- * Fungsi serbaguna untuk memuat data training.
- * @param {number|null} limit - Jumlah item yang ingin ditampilkan. Jika null, tampilkan semua.
- */
+// Fungsi untuk memuat data training
 async function loadTraining(limit = null) {
-    // Ganti 'trainingContainer' dengan ID container yang sesuai di halaman Anda
-    const container = document.getElementById('trainingContainer') || document.getElementById('allTrainingContainer');
-    if (!container) return; // Hentikan jika container tidak ditemukan
+    const container = document.getElementById('trainingContainer');
+    if (!container) return;
 
-    container.innerHTML = 'Memuat data training...'; // Tampilkan pesan loading
-
+    container.innerHTML = '<p>Memuat data training...</p>';
     const trainingData = await fetchData("getTraining");
 
-    // Cek apakah data berhasil diambil
     if (!trainingData || trainingData.length === 0) {
         container.innerHTML = '<p>Belum ada data training yang tersedia.</p>';
         return;
     }
 
-    // Tentukan data mana yang akan ditampilkan berdasarkan limit
     const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
 
-    container.innerHTML = ''; // Kosongkan container sebelum mengisi dengan data baru
+    container.innerHTML = ''; // Kosongkan container
     itemsToDisplay.forEach(item => {
         container.innerHTML += `
-            <div class="card">
-                <img src="${item.thumbnail}" alt="${item.nama_training}" style="width:100%; height:150px; object-fit:cover;">
-                <h3>${item.nama_training}</h3>
-                <p>${item.deskripsi}</p>
+            <div class="card" data-title="${item.namatraining.toLowerCase()}">
+                <img src="${item.thumbnail}" alt="${item.namatraining}" style="width:100%; height:180px; object-fit:cover;">
+                <div class="card-content">
+                  <h3>${item.namatraining}</h3>
+                  <p>${item.deskripsi.substring(0, 100)}...</p>
+                </div>
             </div>
         `;
     });
 }
 
 
-// Fungsi untuk memuat semua berita di halaman news.html
-// function loadAllNews() {
-//     const container = document.getElementById('all-news-container');
-//     container.innerHTML = '<p>Memuat berita...</p>';
-//     fetch(`${SCRIPT_URL}?action=getAllNews`)
-//         .then(response => response.json())
-//         .then(data => {
-//             container.innerHTML = '';
-//              data.sort((a, b) => new Date(b.TanggalPublikasi) - new Date(a.TanggalPublikasi));
-//             data.forEach(news => {
-//                 const item = `
-//                     <div class="news-item" data-title="${news.JudulBerita.toLowerCase()}">
-//                         <img src="${news.URL_Gambar_Berita}" alt="${news.JudulBerita}">
-//                         <div class="news-item-content">
-//                             <h3>${news.JudulBerita}</h3>
-//                             <p>${new Date(news.TanggalPublikasi).toLocaleDateString()}</p>
-//                             <p>${news.IsiBerita}</p>
-//                         </div>
-//                     </div>`;
-//                 container.innerHTML += item;
-//             });
-//         })
-//         .catch(error => console.error('Error fetching all news:', error));
-// }
-
+// Fungsi untuk memuat data berita
 async function loadNews(limit = null) {
     const container = document.getElementById('newsContainer');
-    if (!container) return; 
+    if (!container) return;
 
-    container.innerHTML = 'Memuat berita...';
+    container.innerHTML = '<p>Memuat berita...</p>';
     const newsData = await fetchData("getBerita");
 
     if (!newsData || newsData.length === 0) {
@@ -275,36 +207,29 @@ async function loadNews(limit = null) {
 
     container.innerHTML = '';
     itemsToDisplay.forEach(item => {
+        const tgl = new Date(item.tanggalpublikasi).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' });
         container.innerHTML += `
-            <div class="news-item">
-                <h4>${item.judul_berita}</h4>
-                <p>${item.ringkasan}</p>
-                <small>Dipublikasikan pada: ${item.tanggal_publikasi}</small>
+            <div class="news-item" data-title="${item.judulberita.toLowerCase()}">
+                 <img src="${item.url_gambar_berita}" alt="${item.judulberita}">
+                 <div class="news-item-content">
+                    <h3>${item.judulberita}</h3>
+                    <p><small>Dipublikasikan pada: ${tgl}</small></p>
+                    <p>${item.ringkasan}</p>
+                 </div>
             </div>
         `;
     });
 }
 
-// Fungsi filter untuk pencarian di halaman training
-function filterTrainings() {
-    const query = document.getElementById('trainingSearchInput').value.toLowerCase();
-    const cards = document.querySelectorAll('.training-card');
-    cards.forEach(card => {
-        if (card.dataset.title.includes(query)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-}
-
-// Fungsi filter untuk pencarian di halaman berita
-function filterNews() {
-    const query = document.getElementById('newsSearchInput').value.toLowerCase();
-    const items = document.querySelectorAll('.news-item');
+// Fungsi filter generik untuk halaman training dan berita
+function filterItems() {
+    const query = this.value.toLowerCase();
+    const containerId = this.id === 'trainingSearchInput' ? '#allTrainingPage' : '#allNewsPage';
+    const items = document.querySelectorAll(`${containerId} [data-title]`);
+    
     items.forEach(item => {
         if (item.dataset.title.includes(query)) {
-            item.style.display = 'block';
+            item.style.display = 'flex'; // atau 'block' tergantung layout
         } else {
             item.style.display = 'none';
         }
@@ -315,7 +240,7 @@ function filterNews() {
 // Fungsi untuk menambahkan footer secara dinamis
 function injectFooter() {
     const footerHTML = `
-     <div class="footer-content">
+    <div class="footer-content">
         <div class="footer-section about">
             <h4>Informasi Kontak</h4>
             <p><strong>Alamat:</strong> Jl. Contoh No. 123, Jakarta, Indonesia</p>
@@ -334,11 +259,9 @@ function injectFooter() {
             <h4>Hubungi Kami</h4>
             <a href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20dengan%20training%20Anda." class="whatsapp-btn" target="_blank">Hubungi via WhatsApp</a>
         </div>
-    </div>
-    `;
+    </div>`;
     const footers = document.querySelectorAll('footer');
     footers.forEach(footer => {
         footer.innerHTML = footerHTML;
     });
-
 }

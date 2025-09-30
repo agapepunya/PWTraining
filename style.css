@@ -335,3 +335,22 @@ footer {
     font-size: 0.9em;
     line-height: 1.4;
 }
+
+.participant-header {
+    gap: 30px; /* Beri jarak lebih */
+}
+
+.participant-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.participant-contact {
+    margin-top: 10px;
+}
+
+.participant-contact p {
+    margin: 4px 0;
+    font-size: 0.9em;
+    color: #555;
+}
