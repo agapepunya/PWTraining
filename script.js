@@ -341,7 +341,7 @@ async function loadTestimonials() {
             slider.innerHTML += `
             <div class="testimonial-item">
                 <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
-                <p class="stars">★★★★★</p>
+                // <p class="stars">★★★★★</p>
                 <p>"${testi.isitestimoni}"</p>
                 <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
             </div>

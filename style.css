@@ -365,7 +365,7 @@ footer {
 }
 
 .testimonial-bg {
-    background-image: url('https://via.placeholder.com/1920x1080');
+    background-image: url('https://raw.githubusercontent.com/agapepunya/PWTraining/main/toba.jpg');
     background-size: cover;
     background-position: center center;
     background-attachment: fixed; /* Ini kuncinya agar gambar diam */
