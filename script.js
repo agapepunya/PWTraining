@@ -1,5 +1,5 @@
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSU5plB2ptvnSPkf4907RCpBkwd3y7CrsIjgqGXgLKsAIfmP_cyD69FfhvdSvMNTln/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8dgHIW08lQYSv-Q2oYFkMiEkzKYwbGOQcPHzfq9gimElixcEuWZRPOgsUphPsoLzb/exec"; 
 
 document.addEventListener("DOMContentLoaded", () => {
     // Logika untuk Halaman Utama (index.html)
