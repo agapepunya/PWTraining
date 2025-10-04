@@ -614,10 +614,10 @@ footer {
     align-items: center; /* Menyelaraskan item secara vertikal */
     justify-content: center; /* Menyelaraskan konten secara horizontal di tengah */
     gap: 20px; /* Jarak antara foto dan teks */
-    max-width: 800px; /* Batasi lebar agar tidak terlalu melebar */
+    max-width: 650px; /* Batasi lebar agar tidak terlalu melebar */
     margin: 0 auto; /* Tengah secara horizontal */
     text-align: left; /* Teks di dalam konten tetap rata kiri */
-    padding: 0 50px;
+    padding: 0 100px;
 }
 
 /* Pastikan foto testimoni punya ukuran tetap */

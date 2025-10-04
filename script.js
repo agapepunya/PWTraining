@@ -3,6 +3,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById('initial-content')) { 
+        loadTraining(3);
         loadNews(3);
         loadTestimonials();
         loadPopup(); 
