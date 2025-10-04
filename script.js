@@ -62,14 +62,19 @@ async function loadTraining(limit = null) {
     const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
     container.innerHTML = '';
     itemsToDisplay.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        // Pastikan sheet Anda memiliki kolom 'JudulTraining' dan 'ID_Training'
+        // Logika IF ditambahkan untuk memastikan properti yang dibutuhkan ada
         if (item.judultraining && item.id_training) {
+            const card = document.createElement('div');
+            card.className = 'card';
             card.setAttribute('data-title', item.judultraining.toLowerCase());
-            const deskripsiSingkat = (item.teks_1 || '').substring(0, 100);
+            
+            // Gunakan 'teks_1' jika ada, atau 'deskripsi' dari kolom lama jika masih ada
+            const deskripsiSingkat = (item.teks_1 || item.deskripsi || '').substring(0, 100);
+            // Gunakan 'url_gambar_1' jika ada, atau 'thumbnail' dari kolom lama
+            const imageUrl = item.url_gambar_1 || item.thumbnail;
+
             card.innerHTML = `
-                <img src="${item.url_gambar_1}" alt="${item.judultraining}" style="width:100%; height:180px; object-fit:cover;">
+                <img src="${imageUrl}" alt="${item.judultraining}" style="width:100%; height:180px; object-fit:cover;">
                 <div class="card-content">
                   <h3>${item.judultraining}</h3> 
                   <p>${deskripsiSingkat}...</p>
