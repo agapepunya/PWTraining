@@ -605,3 +605,57 @@ footer {
     margin-bottom: 15px;
     border: 3px solid white;
 }
+
+/* File: style.css */
+
+/* Kontainer utama untuk mengatur tata letak foto dan teks dalam testimonial-item */
+.testimonial-content-wrapper {
+    display: flex; /* Menggunakan flexbox untuk penataan sejajar */
+    align-items: center; /* Menyelaraskan item secara vertikal */
+    justify-content: center; /* Menyelaraskan konten secara horizontal di tengah */
+    gap: 20px; /* Jarak antara foto dan teks */
+    max-width: 800px; /* Batasi lebar agar tidak terlalu melebar */
+    margin: 0 auto; /* Tengah secara horizontal */
+    text-align: left; /* Teks di dalam konten tetap rata kiri */
+}
+
+/* Pastikan foto testimoni punya ukuran tetap */
+.testimonial-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%; /* Membuat gambar bulat */
+    object-fit: cover;
+    flex-shrink: 0; /* Mencegah gambar menyusut */
+}
+
+/* Kontainer teks agar bisa menyesuaikan sisa ruang */
+.testimonial-text-content {
+    flex-grow: 1; /* Memungkinkan teks mengambil sisa ruang */
+}
+
+/* Teks testimoni itu sendiri */
+.testimonial-item p {
+    margin: 0 0 5px 0; /* Atur margin paragraf */
+    line-height: 1.6;
+}
+
+.testimonial-item p.author {
+    font-size: 0.9em;
+    color: #f0f0f0;
+}
+
+/* Hapus bintang jika masih ada sisa CSS-nya */
+.testimonial-item .stars {
+    display: none; /* Menyembunyikan elemen bintang */
+}
+
+/* Untuk tampilan mobile, tumpuk foto dan teks */
+@media (max-width: 768px) {
+    .testimonial-content-wrapper {
+        flex-direction: column; /* Mengubah arah menjadi kolom */
+        text-align: center; /* Tengah teks untuk tampilan mobile */
+    }
+    .testimonial-photo {
+        margin-bottom: 15px; /* Tambahkan jarak di bawah foto */
+    }
+}

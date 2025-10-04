@@ -2,20 +2,19 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Panggil fungsi berdasarkan halaman yang aktif
-    if (document.getElementById('initial-content')) { // Halaman Utama
-        loadTraining(3);
+    if (document.getElementById('initial-content')) { 
         loadNews(3);
         loadTestimonials();
+        loadPopup(); 
         const searchButton = document.querySelector('.search-container button');
         if (searchButton) searchButton.addEventListener('click', searchData);
     }
-    if (document.getElementById('allTrainingPage')) { // Halaman Semua Training
+    if (document.getElementById('allTrainingPage')) { 
         loadTraining();
         const trainingSearchInput = document.getElementById('trainingSearchInput');
         if (trainingSearchInput) trainingSearchInput.addEventListener('keyup', filterItems);
     }
-    if (document.getElementById('allNewsPage')) { // Halaman Semua Berita
+    if (document.getElementById('allNewsPage')) { 
         loadNews();
         const newsSearchInput = document.getElementById('newsSearchInput');
         if (newsSearchInput) newsSearchInput.addEventListener('keyup', filterItems);
@@ -25,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = urlParams.get('id');
         if (id && id.toLowerCase().includes('news')) {
             loadDetailBerita(id);
-        } else if (id) { // Asumsikan selain 'news' adalah training
+        } else if (id) {
             loadDetailTraining(id);
         }
     }
@@ -33,8 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadParticipantDetails();
     }
 
-    loadPopup();
-    injectFooter(); // Selalu panggil footer
+    injectFooter(); // Selalu panggil footer di setiap halaman
 });
 
 // --- FUNGSI HELPER ---
@@ -140,14 +138,29 @@ async function loadTestimonials() {
         testimonialsData.forEach((testi, index) => {
             slider.innerHTML += `
                 <div class="testimonial-item">
-                    <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
-                    <p>"${testi.isitestimoni}"</p>
-                    <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
+                    <div class="testimonial-content-wrapper">
+                        <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
+                        <div class="testimonial-text-content">
+                            <p>"${testi.isitestimoni}"</p>
+                            <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
+                        </div>
+                    </div>
                 </div>`;
             dotsContainer.innerHTML += `<span class="dot" onclick="currentSlide(${index + 1})"></span>`;
         });
-        document.querySelector('.prev').addEventListener('click', () => plusSlides(-1));
-        document.querySelector('.next').addEventListener('click', () => plusSlides(1));
+        
+        // Pastikan event listener untuk tombol prev/next hanya ditambahkan sekali
+        const prevButton = document.querySelector('.prev');
+        const nextButton = document.querySelector('.next');
+        if (prevButton && !prevButton.dataset.listenerAdded) {
+            prevButton.addEventListener('click', () => plusSlides(-1));
+            prevButton.dataset.listenerAdded = 'true';
+        }
+        if (nextButton && !nextButton.dataset.listenerAdded) {
+            nextButton.addEventListener('click', () => plusSlides(1));
+            nextButton.dataset.listenerAdded = 'true';
+        }
+
         showSlides(slideIndex);
     }
 }
@@ -325,10 +338,9 @@ async function loadDetailBerita(id) {
         container.innerHTML = `<p>${data.error}</p>`;
         return;
     }
-
+    
     const article = data.main;
     const recommendations = data.recommendations;
-
     const tgl = new Date(article.tanggalpublikasi).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' });
 
     let contentHTML = `
@@ -342,8 +354,12 @@ async function loadDetailBerita(id) {
         </div>
         <img src="${article.url_gambar_1}" alt="${article.judulberita}" class="full-width-img">
         <div class="detail-content">
-            <p>${article.teks_1.replace(/\n/g, '<br>')}</p>
+            <p>${(article.teks_1 || '').replace(/\n/g, '<br>')}</p>
+    `;
 
+    // DITAMBAHKAN: Cek jika data untuk bagian 2 ada
+    if (article.url_gambar_2 && article.teks_2) {
+        contentHTML += `
             <div class="split-section">
                 <div class="image-content">
                     <img src="${article.url_gambar_2}" alt="Ilustrasi 2">
@@ -352,7 +368,12 @@ async function loadDetailBerita(id) {
                     <p>${article.teks_2.replace(/\n/g, '<br>')}</p>
                 </div>
             </div>
+        `;
+    }
 
+    // DITAMBAHKAN: Cek jika data untuk bagian 3 ada
+    if (article.url_gambar_3 && article.teks_3) {
+        contentHTML += `
             <div class="split-section reverse">
                 <div class="image-content">
                      <img src="${article.url_gambar_3}" alt="Ilustrasi 3">
@@ -361,9 +382,12 @@ async function loadDetailBerita(id) {
                     <p>${article.teks_3.replace(/\n/g, '<br>')}</p>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
 
+    contentHTML += `</div>`; // Penutup div.detail-content
+    
+    // ... (sisa kode untuk rekomendasi tidak berubah) ...
     if(recommendations.length > 0) {
         contentHTML += `<div class="recommendations"><h3>Berita Lainnya</h3><div class="cards-container">`;
         recommendations.forEach(rec => {
@@ -380,9 +404,8 @@ async function loadDetailBerita(id) {
     }
 
     container.innerHTML = contentHTML;
-    generateFooter(); // Panggil footer secara manual
+    injectFooter();
 }
-
 
 async function loadDetailTraining(id) {
     const container = document.getElementById('detail-page-content');
@@ -408,28 +431,39 @@ async function loadDetailTraining(id) {
         <img src="${article.url_gambar_1}" alt="${article.judultraining}" class="full-width-img">
         <div class="detail-content">
             <p>${(article.teks_1 || '').replace(/\n/g, '<br>')}</p>
-            
+    `;
+
+    // DITAMBAHKAN: Cek jika data untuk bagian 2 ada
+    if (article.url_gambar_2 && article.teks_2) {
+        contentHTML += `
             <div class="split-section">
                 <div class="image-content">
                     <img src="${article.url_gambar_2}" alt="Ilustrasi 2">
                 </div>
                 <div class="text-content">
-                    <p>${(article.teks_2 || '').replace(/\n/g, '<br>')}</p>
+                    <p>${article.teks_2.replace(/\n/g, '<br>')}</p>
                 </div>
             </div>
-            
+        `;
+    }
+
+    // DITAMBAHKAN: Cek jika data untuk bagian 3 ada
+    if (article.url_gambar_3 && article.teks_3) {
+        contentHTML += `
             <div class="split-section reverse">
                 <div class="image-content">
                      <img src="${article.url_gambar_3}" alt="Ilustrasi 3">
                 </div>
                 <div class="text-content">
-                    <p>${(article.teks_3 || '').replace(/\n/g, '<br>')}</p>
+                    <p>${article.teks_3.replace(/\n/g, '<br>')}</p>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
     
-    // Tambahkan rekomendasi jika ada
+    contentHTML += `</div>`; // Penutup div.detail-content
+
+    // ... (sisa kode untuk rekomendasi tidak berubah) ...
     if(recommendations.length > 0) {
         contentHTML += `<div class="recommendations"><h3>Training Lainnya</h3><div class="cards-container">`;
         recommendations.forEach(rec => {
@@ -446,5 +480,5 @@ async function loadDetailTraining(id) {
     }
 
     container.innerHTML = contentHTML;
-    injectFooter(); // Panggil footer secara manual (ganti dengan generateFooter jika itu nama fungsi Anda)
+    injectFooter();
 }
