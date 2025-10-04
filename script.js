@@ -1,71 +1,173 @@
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6Ya3aZXqwBzvGGhQwSawbidL9IiEYfmVmyLad2fYD5-_b0DU/exec";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6Ya3aZXqwBzvGGhQwSawbidL9IiEYfmVmyLad2fYD5-_b0DU/exec"; 
-
+// --- EVENT LISTENER UTAMA ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Logika untuk Halaman Utama (index.html)
-    if (document.getElementById('ourTraining')) {
-        loadTraining(3); // Memuat 3 training terbaru
-    }
-    if (document.getElementById('latestNews')) {
-        loadNews(3); // Memuat 3 berita terbaru
-    }
-
-    // Logika untuk halaman semua training (trainings.html)
-    if (document.getElementById('allTrainingPage')) {
-        loadTraining(); // Memuat SEMUA training
-    }
-
-    // Logika untuk halaman semua berita (news.html)
-    if (document.getElementById('allNewsPage')) {
-        loadNews(); // Memuat SEMUA berita
-    }
-    
-    // Logika untuk halaman detail
-    if (document.getElementById('detail-content')) {
-        loadParticipantDetails();
-    }
-
-    // Event listener untuk pencarian di halaman utama
-    const searchButton = document.querySelector('.search-container button');
-    if (searchButton && searchButton.onclick === null) { // Cek jika onclick belum diatur di HTML
-         searchButton.addEventListener('click', searchData);
-    }
-    
-    // Event listener untuk filter di halaman training
-    const trainingSearchInput = document.getElementById('trainingSearchInput');
-    if (trainingSearchInput) {
-        trainingSearchInput.addEventListener('keyup', filterItems);
-    }
-
-    // Event listener untuk filter di halaman berita
-    const newsSearchInput = document.getElementById('newsSearchInput');
-    if (newsSearchInput) {
-        newsSearchInput.addEventListener('keyup', filterItems);
-    }
-
-    if (document.getElementById('testimonials')) {
+    // Panggil fungsi berdasarkan halaman yang aktif
+    if (document.getElementById('initial-content')) { // Halaman Utama
+        loadTraining(3);
+        loadNews(3);
         loadTestimonials();
+        const searchButton = document.querySelector('.search-container button');
+        if (searchButton) searchButton.addEventListener('click', searchData);
     }
-
-    if (document.getElementById('detail-page-content')) {
+    if (document.getElementById('allTrainingPage')) { // Halaman Semua Training
+        loadTraining();
+        const trainingSearchInput = document.getElementById('trainingSearchInput');
+        if (trainingSearchInput) trainingSearchInput.addEventListener('keyup', filterItems);
+    }
+    if (document.getElementById('allNewsPage')) { // Halaman Semua Berita
+        loadNews();
+        const newsSearchInput = document.getElementById('newsSearchInput');
+        if (newsSearchInput) newsSearchInput.addEventListener('keyup', filterItems);
+    }
+    if (document.getElementById('detail-page-content')) { // Halaman Detail
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
-        // Cek ID untuk menentukan fungsi mana yang dipanggil
         if (id && id.toLowerCase().includes('news')) {
             loadDetailBerita(id);
-        } else if (id && id.toLowerCase().includes('tr')) { // asumsikan ID training mengandung 'TR'
+        } else if (id) { // Asumsikan selain 'news' adalah training
             loadDetailTraining(id);
         }
     }
-    
+    if (document.getElementById('detail-content')) { // Halaman Detail Peserta
+        loadParticipantDetails();
+    }
+
     loadPopup();
-    // Selalu tambahkan footer di setiap halaman
-    injectFooter();
+    injectFooter(); // Selalu panggil footer
 });
+
+// --- FUNGSI HELPER ---
+async function fetchData(action) {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=${action}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error(`Error fetching ${action}:`, error);
+        return [];
+    }
+}
+
+// --- FUNGSI UNTUK MEMUAT KONTEN ---
+async function loadTraining(limit = null) {
+    const container = document.getElementById('trainingContainer');
+    if (!container) return;
+    container.innerHTML = '<p>Memuat data training...</p>';
+    const trainingData = await fetchData("getTraining");
+
+    if (!trainingData || trainingData.length === 0) {
+        container.innerHTML = '<p>Belum ada data training yang tersedia.</p>';
+        return;
+    }
+    const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
+    container.innerHTML = '';
+    itemsToDisplay.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        // Pastikan sheet Anda memiliki kolom 'JudulTraining' dan 'ID_Training'
+        if (item.judultraining && item.id_training) {
+            card.setAttribute('data-title', item.judultraining.toLowerCase());
+            const deskripsiSingkat = (item.teks_1 || '').substring(0, 100);
+            card.innerHTML = `
+                <img src="${item.url_gambar_1}" alt="${item.judultraining}" style="width:100%; height:180px; object-fit:cover;">
+                <div class="card-content">
+                  <h3>${item.judultraining}</h3> 
+                  <p>${deskripsiSingkat}...</p>
+                </div>
+            `;
+            card.addEventListener('click', () => {
+                window.location.href = `detail-training.html?id=${item.id_training}`;
+            });
+            container.appendChild(card);
+        }
+    });
+}
+
+async function loadNews(limit = null) {
+    const container = document.getElementById('newsContainer');
+    if (!container) return;
+    container.innerHTML = '<p>Memuat berita...</p>';
+    const newsData = await fetchData("getBerita");
+
+    if (!newsData || newsData.length === 0) {
+        container.innerHTML = '<p>Belum ada berita yang tersedia.</p>';
+        return;
+    }
+    const itemsToDisplay = limit ? newsData.slice(0, limit) : newsData;
+    container.innerHTML = '';
+    itemsToDisplay.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'news-item';
+        // Pastikan sheet Anda memiliki kolom 'JudulBerita' dan 'ID_Berita'
+        if (item.judulberita && item.id_berita) {
+            card.setAttribute('data-title', item.judulberita.toLowerCase());
+            const ringkasan = item.ringkasan || (item.teks_1 || '').substring(0, 150);
+            const tgl = new Date(item.tanggalpublikasi).toLocaleDateString("id-ID");
+            card.innerHTML = `
+               <img src="${item.url_gambar_1}" alt="${item.judulberita}">
+               <div class="news-item-content">
+                  <h3>${item.judulberita}</h3>
+                  <p><small>Dipublikasikan pada: ${tgl}</small></p>
+                  <p>${ringkasan}...</p>
+               </div>
+            `;
+            card.addEventListener('click', () => {
+                window.location.href = `detail-berita.html?id=${item.id_berita}`;
+            });
+            container.appendChild(card);
+        }
+    });
+}
+
+// --- FUNGSI FITUR LAINNYA ---
+let slideIndex = 1;
+async function loadTestimonials() {
+    const settings = await fetchData("getPengaturan");
+    const bgElement = document.querySelector('.testimonial-bg');
+    if (bgElement && settings.TestimoniBackground) {
+        bgElement.style.backgroundImage = `url(${settings.TestimoniBackground})`;
+    }
+
+    const testimonialsData = await fetchData("getTestimoni");
+    const slider = document.querySelector('.testimonial-slider');
+    const dotsContainer = document.querySelector('.testimonial-dots');
+    if (!slider || !dotsContainer) return;
+
+    if (testimonialsData.length > 0) {
+        slider.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        testimonialsData.forEach((testi, index) => {
+            slider.innerHTML += `
+                <div class="testimonial-item">
+                    <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
+                    <p class="stars">★★★★★</p>
+                    <p>"${testi.isitestimoni}"</p>
+                    <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
+                </div>`;
+            dotsContainer.innerHTML += `<span class="dot" onclick="currentSlide(${index + 1})"></span>`;
+        });
+        document.querySelector('.prev').addEventListener('click', () => plusSlides(-1));
+        document.querySelector('.next').addEventListener('click', () => plusSlides(1));
+        showSlides(slideIndex);
+    }
+}
+
+function plusSlides(n) { showSlides(slideIndex += n); }
+function currentSlide(n) { showSlides(slideIndex = n); }
+function showSlides(n) {
+    let slides = document.getElementsByClassName("testimonial-item");
+    let dots = document.getElementsByClassName("dot");
+    if (n > slides.length) { slideIndex = 1 }
+    if (n < 1) { slideIndex = slides.length }
+    for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
+    for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
+    slides[slideIndex - 1].style.display = "block";
+    dots[slideIndex - 1].className += " active";
+}
 
 async function loadPopup() {
     const settings = await fetchData("getPengaturan");
-
     if (settings.PopupStatus === 'ON' && settings.PopupImageURL) {
         const popupHTML = `
             <div class="popup-overlay" id="popupOverlay">
@@ -75,39 +177,17 @@ async function loadPopup() {
                         <img src="${settings.PopupImageURL}" alt="Announcement">
                     </a>
                 </div>
-            </div>
-        `;
-
+            </div>`;
         document.body.insertAdjacentHTML('beforeend', popupHTML);
-
-        document.getElementById('popupClose').addEventListener('click', () => {
-            document.getElementById('popupOverlay').remove();
-        });
+        document.getElementById('popupClose').addEventListener('click', () => document.getElementById('popupOverlay').remove());
         document.getElementById('popupOverlay').addEventListener('click', (event) => {
-            if(event.target === document.getElementById('popupOverlay')) {
-                 document.getElementById('popupOverlay').remove();
+            if (event.target === document.getElementById('popupOverlay')) {
+                document.getElementById('popupOverlay').remove();
             }
         });
     }
-}   
-
-// Fungsi terpusat untuk fetch data
-async function fetchData(action) {
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=${action}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`Error fetching ${action}:`, error);
-        return []; // Kembalikan array kosong jika error
-    }
 }
 
-
-
-// Fungsi untuk melakukan pencarian peserta
 function searchData() {
     const query = document.getElementById('searchInput').value;
     if (query.length < 3) {
@@ -146,8 +226,6 @@ function searchData() {
             tableBody.innerHTML = '<tr><td colspan="3">Terjadi kesalahan saat mencari.</td></tr>';
         });
 }
-
-
 
 function loadParticipantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -205,86 +283,6 @@ function loadParticipantDetails() {
         });
 }
 
-// File: script.js
-// Ganti fungsi loadTraining Anda dengan versi ini
-
-async function loadTraining(limit = null) {
-    const container = document.getElementById('trainingContainer');
-    if (!container) return;
-
-    container.innerHTML = '<p>Memuat data training...</p>';
-    const trainingData = await fetchData("getTraining");
-
-    if (!trainingData || trainingData.length === 0) {
-        container.innerHTML = '<p>Belum ada data training yang tersedia.</p>';
-        return;
-    }
-
-    const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
-
-    container.innerHTML = '';
-    itemsToDisplay.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.setAttribute('data-title', item.judultraining.toLowerCase());
-        
-        // Menggunakan item.teks_1 || '' untuk memastikan tidak ada error jika sel kosong
-        const deskripsiSingkat = (item.teks_1 || '').substring(0, 100);
-
-        card.innerHTML = `
-            <img src="${item.url_gambar_1}" alt="${item.judultraining}" style="width:100%; height:180px; object-fit:cover;">
-            <div class="card-content">
-              <h3>${item.judultraining}</h3> 
-              <p>${deskripsiSingkat}...</p>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => {
-            window.location.href = `detail-training.html?id=${item.id_training}`;
-        });
-        
-        container.appendChild(card);
-    });
-}
-
-async function loadNews(limit = null) {
-    const container = document.getElementById('newsContainer');
-    if (!container) return;
-
-    container.innerHTML = '<p>Memuat berita...</p>';
-    const newsData = await fetchData("getBerita");
-
-    if (!newsData || newsData.length === 0) {
-        container.innerHTML = '<p>Belum ada berita yang tersedia.</p>';
-        return;
-    }
-
-    const itemsToDisplay = limit ? newsData.slice(0, limit) : newsData;
-
-    container.innerHTML = '';
-    itemsToDisplay.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'news-item'; // atau 'card' untuk training
-    card.setAttribute('data-title', item.judulberita.toLowerCase()); // atau item.judultraining
-
-    card.innerHTML = `
-         <img src="${item.url_gambar_berita || item.thumbnail}" alt="${item.judulberita}">
-         <div class="news-item-content">
-            <h3>${item.judulberita}</h3>
-            <p><small>Dipublikasikan pada: ...</small></p>
-            <p>${item.ringkasan}</p>
-         </div>
-    `;
-
-    card.addEventListener('click', () => {
-        window.location.href = `detail-berita.html?id=${item.id_berita}`; // atau detail-training.html
-    });
-
-    container.appendChild(card);
-});
-}
-
-// Fungsi filter generik untuk halaman training dan berita
 function filterItems() {
     const query = this.value.toLowerCase();
     const containerId = this.id === 'trainingSearchInput' ? '#allTrainingPage' : '#allNewsPage';
@@ -292,15 +290,13 @@ function filterItems() {
     
     items.forEach(item => {
         if (item.dataset.title.includes(query)) {
-            item.style.display = 'flex'; // atau 'block' tergantung layout
+            item.style.display = 'flex'; 
         } else {
             item.style.display = 'none';
         }
     });
 }
 
-
-// Fungsi untuk menambahkan footer secara dinamis
 function injectFooter() {
     const footerHTML = `
     <div class="footer-content">
@@ -319,67 +315,6 @@ function injectFooter() {
     footers.forEach(footer => {
         footer.innerHTML = footerHTML;
     });
-}
-
-let slideIndex = 1;
-let testimonialsData = [];
-
-async function loadTestimonials() {
-    // 1. Ambil pengaturan untuk background
-    const settings = await fetchData("getPengaturan");
-    if (settings.TestimoniBackground) {
-        document.querySelector('.testimonial-bg').style.backgroundImage = `url(${settings.TestimoniBackground})`;
-    }
-
-    // 2. Ambil data testimoni
-    testimonialsData = await fetchData("getTestimoni");
-    const slider = document.querySelector('.testimonial-slider');
-    const dotsContainer = document.querySelector('.testimonial-dots');
-
-    if (testimonialsData.length > 0) {
-        testimonialsData.forEach((testi, index) => {
-            slider.innerHTML += `
-            <div class="testimonial-item">
-                <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
-                // <p class="stars">★★★★★</p>
-                <p>"${testi.isitestimoni}"</p>
-                <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
-            </div>
-            `;
-            dotsContainer.innerHTML += `<span class="dot" onclick="currentSlide(${index + 1})"></span>`;
-        });
-
-        // Tambahkan event listener untuk tombol next/prev
-        document.querySelector('.prev').addEventListener('click', () => plusSlides(-1));
-        document.querySelector('.next').addEventListener('click', () => plusSlides(1));
-
-        showSlides(slideIndex);
-    }
-}
-
-// Fungsi slider
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  let i;
-  let slides = document.getElementsByClassName("testimonial-item");
-  let dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-    slides[i].style.display = "none";
-  }
-  for (i = 0; i < dots.length; i++) {
-    dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";
-  dots[slideIndex-1].className += " active";
 }
 
 async function loadDetailBerita(id) {
@@ -430,7 +365,6 @@ async function loadDetailBerita(id) {
         </div>
     `;
 
-    // Tambahkan rekomendasi jika ada
     if(recommendations.length > 0) {
         contentHTML += `<div class="recommendations"><h3>Berita Lainnya</h3><div class="cards-container">`;
         recommendations.forEach(rec => {
@@ -450,7 +384,6 @@ async function loadDetailBerita(id) {
     generateFooter(); // Panggil footer secara manual
 }
 
-// Tambahkan fungsi ini di script.js Anda
 
 async function loadDetailTraining(id) {
     const container = document.getElementById('detail-page-content');
@@ -516,4 +449,3 @@ async function loadDetailTraining(id) {
     container.innerHTML = contentHTML;
     injectFooter(); // Panggil footer secara manual (ganti dengan generateFooter jika itu nama fungsi Anda)
 }
-
