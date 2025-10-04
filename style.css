@@ -354,3 +354,244 @@ footer {
     font-size: 0.9em;
     color: #555;
 }
+
+/* --- Testimonial Section --- */
+#testimonials {
+    position: relative;
+    padding: 80px 20px;
+    text-align: center;
+    color: white;
+    overflow: hidden; /* Penting untuk background fixed */
+}
+
+.testimonial-bg {
+    background-image: url('https://via.placeholder.com/1920x1080'); /* URL gambar default */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Membuat background tidak bergerak saat scroll */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.testimonial-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #003366; /* Warna biru */
+    opacity: 0.2; /* Opacity 20% */
+    z-index: 2;
+}
+
+.testimonial-container {
+    position: relative;
+    z-index: 3;
+    max-width: 800px;
+    margin: auto;
+}
+
+.testimonial-slider .testimonial-item {
+    display: none; /* Sembunyikan semua testimoni secara default */
+}
+
+.testimonial-item p {
+    font-style: italic;
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+.testimonial-item .author {
+    margin-top: 20px;
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Next & previous buttons */
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -22px;
+  color: white;
+  font-weight: bold;
+  font-size: 24px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+}
+
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.prev {
+    left: 0;
+}
+
+.prev:hover, .next:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+/* Dots */
+.dot {
+  cursor: pointer;
+  height: 15px;
+  width: 15px;
+  margin: 0 5px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.6s ease;
+}
+
+.active, .dot:hover {
+  background-color: #717171;
+}
+
+/* --- Popup Announcement --- */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+}
+
+.popup-content img {
+    width: 100%;
+    display: block;
+}
+
+.popup-close {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 35px;
+    height: 35px;
+    background-color: white;
+    color: black;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid #333;
+}
+
+/* --- Detail Page --- */
+.detail-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+.detail-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.detail-meta {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.detail-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.detail-buttons a {
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-back {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn-see-others {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.full-width-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.detail-content p {
+    line-height: 1.8;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+}
+
+.split-section {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+
+.split-section .text-content {
+    width: 60%;
+}
+
+.split-section .image-content {
+    width: 40%;
+}
+
+.split-section img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Untuk membalik urutan: gambar kanan, teks kiri */
+.split-section.reverse {
+    flex-direction: row-reverse;
+}
+
+.recommendations {
+    margin-top: 50px;
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+}
+
+.recommendations h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
