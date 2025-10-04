@@ -368,7 +368,7 @@ footer {
     background-image: url('https://drive.google.com/file/d/1mv5YUUj_2o4kBOeQpJftdNGTlPZTYlfU/view?usp=sharing');
     background-size: cover;
     background-position: center center;
-    background-attachment: fixed; /* Ini kuncinya agar gambar diam */
+    background-attachment: fixed; 
     position: absolute;
     top: 0;
     left: 0;
