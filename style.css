@@ -357,22 +357,22 @@ footer {
 
 /* --- Testimonial Section --- */
 #testimonials {
-    position: relative;
-    padding: 80px 20px;
+    position: relative; /* Ini sudah ada, pastikan tidak terhapus */
+    padding: 80px 0; /* Ubah padding agar tidak ada jarak kiri-kanan */
     text-align: center;
     color: white;
-    overflow: hidden; /* Penting untuk background fixed */
+    overflow: hidden;
 }
 
 .testimonial-bg {
-    background-image: url('https://via.placeholder.com/1920x1080'); /* URL gambar default */
+    background-image: url('https://via.placeholder.com/1920x1080');
     background-size: cover;
-    background-position: center;
-    background-attachment: fixed; /* Membuat background tidak bergerak saat scroll */
+    background-position: center center;
+    background-attachment: fixed; /* Ini kuncinya agar gambar diam */
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100%; /* Memastikan lebar sesuai parent */
     height: 100%;
     z-index: 1;
 }
@@ -594,4 +594,14 @@ footer {
 .recommendations h3 {
     text-align: center;
     margin-bottom: 20px;
+}
+
+/* Tambahkan di bagian CSS Testimoni */
+.testimonial-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%; /* Membuat gambar menjadi bulat */
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid white;
 }

@@ -1,5 +1,5 @@
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8dgHIW08lQYSv-Q2oYFkMiEkzKYwbGOQcPHzfq9gimElixcEuWZRPOgsUphPsoLzb/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9Lo41CS-FGjxh-e3fDwIcCPCmmdYk7bIFFcf-gb6rtVBfDXYeaoMsZTWw_9MEj4ea/exec"; 
 
 document.addEventListener("DOMContentLoaded", () => {
     // Logika untuk Halaman Utama (index.html)
@@ -339,11 +339,12 @@ async function loadTestimonials() {
     if (testimonialsData.length > 0) {
         testimonialsData.forEach((testi, index) => {
             slider.innerHTML += `
-                <div class="testimonial-item">
-                    <p class="stars">★★★★★</p>
-                    <p>"${testi.isitestimoni}"</p>
-                    <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
-                </div>
+            <div class="testimonial-item">
+                <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
+                <p class="stars">★★★★★</p>
+                <p>"${testi.isitestimoni}"</p>
+                <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
+            </div>
             `;
             dotsContainer.innerHTML += `<span class="dot" onclick="currentSlide(${index + 1})"></span>`;
         });
