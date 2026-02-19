@@ -20,7 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
     injectFooter();
 });
 
-// --- EVENT LISTENER UTAMA ---
+async function fetchData(action) {
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=${action}`);
+        return await res.json();
+    } catch (e) { console.error(e); return []; }
+}
+
 async function loadParticipantDetails() {
     const container = document.getElementById('participant-details-container');
     const id = new URLSearchParams(window.location.search).get('id');
@@ -41,8 +47,6 @@ async function loadParticipantDetails() {
             </div>
         </div>
     `;
-
-    
 
     data.trainings.forEach((t, i) => {
         html += `
@@ -65,52 +69,6 @@ async function loadParticipantDetails() {
         `;
     });
     container.innerHTML = html;
-}
-// document.addEventListener("DOMContentLoaded", () => {
-//     if (document.getElementById('initial-content')) { 
-//         loadTraining(3);
-//         loadNews(3);
-//         loadTestimonials();
-//         loadPopup(); 
-//         const searchButton = document.querySelector('.search-container button');
-//         if (searchButton) searchButton.addEventListener('click', searchData);
-//     }
-//     if (document.getElementById('allTrainingPage')) { 
-//         loadTraining();
-//         const trainingSearchInput = document.getElementById('trainingSearchInput');
-//         if (trainingSearchInput) trainingSearchInput.addEventListener('keyup', filterItems);
-//     }
-//     if (document.getElementById('allNewsPage')) { 
-//         loadNews();
-//         const newsSearchInput = document.getElementById('newsSearchInput');
-//         if (newsSearchInput) newsSearchInput.addEventListener('keyup', filterItems);
-//     }
-//     if (document.getElementById('detail-page-content')) { // Halaman Detail
-//         const urlParams = new URLSearchParams(window.location.search);
-//         const id = urlParams.get('id');
-//         if (id && id.toLowerCase().includes('news')) {
-//             loadDetailBerita(id);
-//         } else if (id) {
-//             loadDetailTraining(id);
-//         }
-//     }
-//     if (document.getElementById('detail-content')) { // Halaman Detail Peserta
-//         loadParticipantDetails();
-//     }
-
-//     injectFooter(); // Selalu panggil footer di setiap halaman
-// });
-
-// --- FUNGSI HELPER ---
-async function fetchData(action) {
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=${action}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error(`Error fetching ${action}:`, error);
-        return [];
-    }
 }
 
 // --- FUNGSI UNTUK MEMUAT KONTEN ---
