@@ -1,40 +1,83 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6Ya3aZXqwBzvGGhQwSawbidL9IiEYfmVmyLad2fYD5-_b0DU/exec";
 
 // --- EVENT LISTENER UTAMA ---
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById('initial-content')) { 
-        loadTraining(3);
-        loadNews(3);
-        loadTestimonials();
-        loadPopup(); 
-        const searchButton = document.querySelector('.search-container button');
-        if (searchButton) searchButton.addEventListener('click', searchData);
-    }
-    if (document.getElementById('allTrainingPage')) { 
-        loadTraining();
-        const trainingSearchInput = document.getElementById('trainingSearchInput');
-        if (trainingSearchInput) trainingSearchInput.addEventListener('keyup', filterItems);
-    }
-    if (document.getElementById('allNewsPage')) { 
-        loadNews();
-        const newsSearchInput = document.getElementById('newsSearchInput');
-        if (newsSearchInput) newsSearchInput.addEventListener('keyup', filterItems);
-    }
-    if (document.getElementById('detail-page-content')) { // Halaman Detail
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        if (id && id.toLowerCase().includes('news')) {
-            loadDetailBerita(id);
-        } else if (id) {
-            loadDetailTraining(id);
-        }
-    }
-    if (document.getElementById('detail-content')) { // Halaman Detail Peserta
-        loadParticipantDetails();
-    }
+async function loadParticipantDetails() {
+    const container = document.getElementById('participant-details-container');
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id) return;
 
-    injectFooter(); // Selalu panggil footer di setiap halaman
-});
+    container.innerHTML = "<p>Memuat data peserta...</p>";
+    const data = await fetchData(`getParticipantDetails&id=${id}`);
+
+    if (data.error) { container.innerHTML = `<p>${data.error}</p>`; return; }
+
+    let html = `
+        <div class="participant-header">
+            <img src="${data.url_foto_profil || ''}" alt="Foto Profil">
+            <div class="participant-info">
+                <h2>${data.nama_lengkap}</h2>
+                <p>Email: ${data.email || '-'}</p>
+                <p>Telepon: ${data.telepon || '-'}</p>
+            </div>
+        </div>
+    `;
+
+    data.trainings.forEach((t, i) => {
+        html += `
+            <div class="training-container">
+                <h3>${t.nama_training}</h3>
+                <p>Kode Sertifikat: <strong>${t.kode_sertifikat}</strong></p>
+                <div class="pdf-section">
+                    <h4>Sertifikat (PDF):</h4>
+                    <div class="pdf-actions">
+                        <a href="${t.pdf.download}" class="btn-pdf download" download>Download PDF</a>
+                        <a href="${t.pdf.view}" target="_blank" class="btn-pdf fullscreen">Lihat Fullscreen</a>
+                    </div>
+                    <iframe src="${t.pdf.view.replace('/view', '/preview')}" class="pdf-iframe"></iframe>
+                </div>
+                <h4>Dokumentasi:</h4>
+                <div class="documentation-photos">
+                    ${t.dokumentasi.map(img => `<img src="${img}" alt="Dokumentasi">`).join('')}
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+// document.addEventListener("DOMContentLoaded", () => {
+//     if (document.getElementById('initial-content')) { 
+//         loadTraining(3);
+//         loadNews(3);
+//         loadTestimonials();
+//         loadPopup(); 
+//         const searchButton = document.querySelector('.search-container button');
+//         if (searchButton) searchButton.addEventListener('click', searchData);
+//     }
+//     if (document.getElementById('allTrainingPage')) { 
+//         loadTraining();
+//         const trainingSearchInput = document.getElementById('trainingSearchInput');
+//         if (trainingSearchInput) trainingSearchInput.addEventListener('keyup', filterItems);
+//     }
+//     if (document.getElementById('allNewsPage')) { 
+//         loadNews();
+//         const newsSearchInput = document.getElementById('newsSearchInput');
+//         if (newsSearchInput) newsSearchInput.addEventListener('keyup', filterItems);
+//     }
+//     if (document.getElementById('detail-page-content')) { // Halaman Detail
+//         const urlParams = new URLSearchParams(window.location.search);
+//         const id = urlParams.get('id');
+//         if (id && id.toLowerCase().includes('news')) {
+//             loadDetailBerita(id);
+//         } else if (id) {
+//             loadDetailTraining(id);
+//         }
+//     }
+//     if (document.getElementById('detail-content')) { // Halaman Detail Peserta
+//         loadParticipantDetails();
+//     }
+
+//     injectFooter(); // Selalu panggil footer di setiap halaman
+// });
 
 // --- FUNGSI HELPER ---
 async function fetchData(action) {
