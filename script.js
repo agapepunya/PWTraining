@@ -1,5 +1,5 @@
 // File: script.js
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjZerc7r4NX6VxHKeLn0VhJ0vJUXsmUq6GrzZI1Yc4pL-nCpoq8FPQqui6o150R1pu/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZFWvFOCbBghWD7ef0VcZCFfc3yrEV9N5RPdznLka67EOXFlJ1E2Cz0whX8buA4YDn/exec";
 
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
