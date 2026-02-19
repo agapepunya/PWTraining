@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhVw4dfRWa-XamFxTnmznEHqohLMZZlG-ZEYfcpL9T8VxxeYdepGZXl1WYqAUpXPCH/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjZerc7r4NX6VxHKeLn0VhJ0vJUXsmUq6GrzZI1Yc4pL-nCpoq8FPQqui6o150R1pu/exec";
 
 document.addEventListener("DOMContentLoaded", () => {
     const pageId = document.body.id || "";
@@ -27,47 +27,47 @@ async function fetchData(action) {
     } catch (e) { console.error(e); return []; }
 }
 
+
 async function loadParticipantDetails() {
     const container = document.getElementById('participant-details-container');
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) return;
 
-    container.innerHTML = "<p>Memuat data peserta...</p>";
+    container.innerHTML = "<p>Memuat detail...</p>";
     const data = await fetchData(`getParticipantDetails&id=${id}`);
 
     if (data.error) { container.innerHTML = `<p>${data.error}</p>`; return; }
 
+    // Gunakan 'namalengkap' sesuai header sheet yang sudah diproses di Code.gs
     let html = `
         <div class="participant-header">
-            <img src="${data.url_foto_profil || ''}" alt="Foto Profil">
+            <img src="${data.url_foto_profil || ''}" alt="Foto">
             <div class="participant-info">
-                <h2>${data.nama_lengkap}</h2>
+                <h2>${data.namalengkap || data.nama_lengkap || 'Nama Tidak Tersedia'}</h2>
                 <p>Email: ${data.email || '-'}</p>
                 <p>Telepon: ${data.telepon || '-'}</p>
             </div>
         </div>
     `;
 
-    data.trainings.forEach((t, i) => {
-        html += `
-            <div class="training-container">
-                <h3>${t.nama_training}</h3>
-                <p>Kode Sertifikat: <strong>${t.kode_sertifikat}</strong></p>
-                <div class="pdf-section">
-                    <h4>Sertifikat (PDF):</h4>
-                    <div class="pdf-actions">
-                        <a href="${t.pdf.download}" class="btn-pdf download" download>Download PDF</a>
-                        <a href="${t.pdf.view}" target="_blank" class="btn-pdf fullscreen">Lihat Fullscreen</a>
+    if (data.trainings) {
+        data.trainings.forEach((t) => {
+            html += `
+                <div class="training-container">
+                    <h3>${t.nama_training}</h3>
+                    <p>Kode Sertifikat: <strong>${t.kode_sertifikat}</strong></p>
+                    <div class="pdf-section">
+                        <h4>Sertifikat (PDF):</h4>
+                        <div class="pdf-actions">
+                            <a href="${t.pdf.download}" class="btn-pdf download">Download PDF Asli</a>
+                            <a href="${t.pdf.view}" target="_blank" class="btn-pdf fullscreen">Lihat Fullscreen</a>
+                        </div>
+                        <iframe src="${t.pdf.view}" class="pdf-iframe"></iframe>
                     </div>
-                    <iframe src="${t.pdf.view.replace('/view', '/preview')}" class="pdf-iframe"></iframe>
                 </div>
-                <h4>Dokumentasi:</h4>
-                <div class="documentation-photos">
-                    ${t.dokumentasi.map(img => `<img src="${img}" alt="Dokumentasi">`).join('')}
-                </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
     container.innerHTML = html;
 }
 
