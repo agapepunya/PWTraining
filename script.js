@@ -1,4 +1,5 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDYx24bUHoZroOWicQ6Ya3aZXqwBzvGGhQwSawbidL9IiEYfmVmyLad2fYD5-_b0DU/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhVw4dfRWa-XamFxTnmznEHqohLMZZlG-ZEYfcpL9T8VxxeYdepGZXl1WYqAUpXPCH/exec";
+
 
 // --- EVENT LISTENER UTAMA ---
 async function loadParticipantDetails() {
