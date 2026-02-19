@@ -1,5 +1,24 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhVw4dfRWa-XamFxTnmznEHqohLMZZlG-ZEYfcpL9T8VxxeYdepGZXl1WYqAUpXPCH/exec";
 
+document.addEventListener("DOMContentLoaded", () => {
+    const pageId = document.body.id || "";
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    // Routing Halaman
+    if (document.getElementById('initial-content')) {
+        loadTraining(3); loadNews(3); loadTestimonials(); loadPopup();
+        document.querySelector('.search-container button')?.addEventListener('click', searchData);
+    }
+    if (document.getElementById('allTrainingPage')) loadTraining();
+    if (document.getElementById('allNewsPage')) loadNews();
+    if (document.getElementById('participant-details-container')) loadParticipantDetails();
+    if (document.getElementById('detail-page-content')) {
+        if (id?.toLowerCase().includes('news')) loadDetailBerita(id);
+        else loadDetailTraining(id);
+    }
+    injectFooter();
+});
 
 // --- EVENT LISTENER UTAMA ---
 async function loadParticipantDetails() {
@@ -22,6 +41,8 @@ async function loadParticipantDetails() {
             </div>
         </div>
     `;
+
+    
 
     data.trainings.forEach((t, i) => {
         html += `
