@@ -1,11 +1,10 @@
+// File: script.js
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjZerc7r4NX6VxHKeLn0VhJ0vJUXsmUq6GrzZI1Yc4pL-nCpoq8FPQqui6o150R1pu/exec";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const pageId = document.body.id || "";
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
-    // Routing Halaman
     if (document.getElementById('initial-content')) {
         loadTraining(3); loadNews(3); loadTestimonials(); loadPopup();
         document.querySelector('.search-container button')?.addEventListener('click', searchData);
@@ -27,7 +26,6 @@ async function fetchData(action) {
     } catch (e) { console.error(e); return []; }
 }
 
-
 async function loadParticipantDetails() {
     const container = document.getElementById('participant-details-container');
     const id = new URLSearchParams(window.location.search).get('id');
@@ -38,24 +36,27 @@ async function loadParticipantDetails() {
 
     if (data.error) { container.innerHTML = `<p>${data.error}</p>`; return; }
 
-    // Gunakan 'namalengkap' sesuai header sheet yang sudah diproses di Code.gs
+    // Mengambil nama menggunakan key yang sudah diproses (tanpa spasi/huruf kecil)
+    const namaUser = data.namalengkap || data.nama_lengkap || 'Nama Tidak Tersedia';
+
     let html = `
         <div class="participant-header">
-            <img src="${data.url_foto_profil || ''}" alt="Foto">
+            <img src="${data.url_foto_profil || ''}" alt="Foto Profil">
             <div class="participant-info">
-                <h2>${data.namalengkap || data.nama_lengkap || 'Nama Tidak Tersedia'}</h2>
-                <p>Email: ${data.email || '-'}</p>
-                <p>Telepon: ${data.telepon || '-'}</p>
+                <h2>${namaUser}</h2>
+                <div class="participant-contact">
+                    ${data.email && data.email !== 'N/A' ? `<p><strong>Email:</strong> ${data.email}</p>` : ''}
+                    ${data.telepon && data.telepon !== 'N/A' ? `<p><strong>Telepon:</strong> ${data.telepon}</p>` : ''}
+                </div>
             </div>
-        </div>
-    `;
+        </div>`;
 
     if (data.trainings) {
-        data.trainings.forEach((t) => {
+        data.trainings.forEach((t, index) => {
             html += `
                 <div class="training-container">
-                    <h3>${t.nama_training}</h3>
-                    <p>Kode Sertifikat: <strong>${t.kode_sertifikat}</strong></p>
+                    <h3>Data Training ${index + 1}: ${t.nama_training}</h3>
+                    <p><strong>Kode Sertifikat:</strong> ${t.kode_sertifikat}</p>
                     <div class="pdf-section">
                         <h4>Sertifikat (PDF):</h4>
                         <div class="pdf-actions">
@@ -64,48 +65,32 @@ async function loadParticipantDetails() {
                         </div>
                         <iframe src="${t.pdf.view}" class="pdf-iframe"></iframe>
                     </div>
-                </div>
-            `;
+                    <h4>Dokumentasi Foto:</h4>
+                    <div class="documentation-photos">
+                        ${t.dokumentasi.map(url => `<img src="${url}" alt="Dokumentasi">`).join('')}
+                    </div>
+                </div>`;
         });
     }
     container.innerHTML = html;
 }
 
-// --- FUNGSI UNTUK MEMUAT KONTEN ---
+// Fungsi pendukung lainnya (loadTraining, loadNews, loadTestimonials, dll)
 async function loadTraining(limit = null) {
     const container = document.getElementById('trainingContainer');
     if (!container) return;
-    container.innerHTML = '<p>Memuat data training...</p>';
-    const trainingData = await fetchData("getTraining");
-
-    if (!trainingData || trainingData.length === 0) {
-        container.innerHTML = '<p>Belum ada data training yang tersedia.</p>';
-        return;
-    }
-    const itemsToDisplay = limit ? trainingData.slice(0, limit) : trainingData;
+    const data = await fetchData("getTraining");
+    if (!data || data.length === 0) { container.innerHTML = '<p>Belum ada data.</p>'; return; }
+    const items = limit ? data.slice(0, limit) : data;
     container.innerHTML = '';
-    itemsToDisplay.forEach(item => {
-        // Logika IF ditambahkan untuk memastikan properti yang dibutuhkan ada
-        if (item.judultraining && item.id_training) {
+    items.forEach(item => {
+        if (item.judultraining) {
             const card = document.createElement('div');
             card.className = 'card';
-            card.setAttribute('data-title', item.judultraining.toLowerCase());
-            
-            // Gunakan 'teks_1' jika ada, atau 'deskripsi' dari kolom lama jika masih ada
-            const deskripsiSingkat = (item.teks_1 || item.deskripsi || '').substring(0, 100);
-            // Gunakan 'url_gambar_1' jika ada, atau 'thumbnail' dari kolom lama
-            const imageUrl = item.url_gambar_1 || item.thumbnail;
-
             card.innerHTML = `
-                <img src="${imageUrl}" alt="${item.judultraining}" style="width:100%; height:180px; object-fit:cover;">
-                <div class="card-content">
-                  <h3>${item.judultraining}</h3> 
-                  <p>${deskripsiSingkat}...</p>
-                </div>
-            `;
-            card.addEventListener('click', () => {
-                window.location.href = `detail-training.html?id=${item.id_training}`;
-            });
+                <img src="${item.url_gambar_1 || item.thumbnail}" alt="${item.judultraining}">
+                <div class="card-content"><h3>${item.judultraining}</h3><p>${(item.teks_1 || '').substring(0, 100)}...</p></div>`;
+            card.onclick = () => window.location.href = `detail-training.html?id=${item.id_training}`;
             container.appendChild(card);
         }
     });
@@ -114,400 +99,116 @@ async function loadTraining(limit = null) {
 async function loadNews(limit = null) {
     const container = document.getElementById('newsContainer');
     if (!container) return;
-    container.innerHTML = '<p>Memuat berita...</p>';
-    const newsData = await fetchData("getBerita");
-
-    if (!newsData || newsData.length === 0) {
-        container.innerHTML = '<p>Belum ada berita yang tersedia.</p>';
-        return;
-    }
-    const itemsToDisplay = limit ? newsData.slice(0, limit) : newsData;
+    const data = await fetchData("getBerita");
+    if (!data || data.length === 0) { container.innerHTML = '<p>Belum ada berita.</p>'; return; }
+    const items = limit ? data.slice(0, limit) : data;
     container.innerHTML = '';
-    itemsToDisplay.forEach(item => {
+    items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'news-item';
-        // Pastikan sheet Anda memiliki kolom 'JudulBerita' dan 'ID_Berita'
-        if (item.judulberita && item.id_berita) {
-            card.setAttribute('data-title', item.judulberita.toLowerCase());
-            const ringkasan = item.ringkasan || (item.teks_1 || '').substring(0, 150);
-            const tgl = new Date(item.tanggalpublikasi).toLocaleDateString("id-ID");
-            card.innerHTML = `
-               <img src="${item.url_gambar_1}" alt="${item.judulberita}">
-               <div class="news-item-content">
-                  <h3>${item.judulberita}</h3>
-                  <p><small>Dipublikasikan pada: ${tgl}</small></p>
-                  <p>${ringkasan}...</p>
-               </div>
-            `;
-            card.addEventListener('click', () => {
-                window.location.href = `detail-berita.html?id=${item.id_berita}`;
-            });
-            container.appendChild(card);
-        }
+        card.innerHTML = `
+            <img src="${item.url_gambar_1}" alt="${item.judulberita}">
+            <div class="news-item-content">
+                <h3>${item.judulberita}</h3>
+                <p><small>${new Date(item.tanggalpublikasi).toLocaleDateString("id-ID")}</small></p>
+                <p>${item.ringkasan || ''}</p>
+            </div>`;
+        card.onclick = () => window.location.href = `detail-berita.html?id=${item.id_berita}`;
+        container.appendChild(card);
     });
 }
 
-// --- FUNGSI FITUR LAINNYA ---
-let slideIndex = 1;
+// Slider Testimoni
 async function loadTestimonials() {
     const settings = await fetchData("getPengaturan");
-    const bgElement = document.querySelector('.testimonial-bg');
-    if (bgElement && settings.TestimoniBackground) {
-        bgElement.style.backgroundImage = `url(${settings.TestimoniBackground})`;
-    }
+    const bg = document.querySelector('.testimonial-bg');
+    if (bg && settings.TestimoniBackground) bg.style.backgroundImage = `url(${settings.TestimoniBackground})`;
 
-    const testimonialsData = await fetchData("getTestimoni");
+    const data = await fetchData("getTestimoni");
     const slider = document.querySelector('.testimonial-slider');
-    const dotsContainer = document.querySelector('.testimonial-dots');
-    if (!slider || !dotsContainer) return;
+    const dots = document.querySelector('.testimonial-dots');
+    if (!slider || !data.length) return;
 
-    if (testimonialsData.length > 0) {
-        slider.innerHTML = '';
-        dotsContainer.innerHTML = '';
-        testimonialsData.forEach((testi, index) => {
-            slider.innerHTML += `
-                <div class="testimonial-item">
-                    <div class="testimonial-content-wrapper">
-                        <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
-                        <div class="testimonial-text-content">
-                            <p>"${testi.isitestimoni}"</p>
-                            <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
-                        </div>
+    data.forEach((testi, i) => {
+        slider.innerHTML += `
+            <div class="testimonial-item">
+                <div class="testimonial-content-wrapper">
+                    <img src="${testi.url_foto}" class="testimonial-photo" alt="${testi.nama}">
+                    <div class="testimonial-text-content">
+                        <p>"${testi.isitestimoni}"</p>
+                        <p class="author">${testi.nama} / ${testi.jabatanperusahaan}</p>
                     </div>
-                </div>`;
-            dotsContainer.innerHTML += `<span class="dot" onclick="currentSlide(${index + 1})"></span>`;
-        });
-        
-        // Pastikan event listener untuk tombol prev/next hanya ditambahkan sekali
-        const prevButton = document.querySelector('.prev');
-        const nextButton = document.querySelector('.next');
-        if (prevButton && !prevButton.dataset.listenerAdded) {
-            prevButton.addEventListener('click', () => plusSlides(-1));
-            prevButton.dataset.listenerAdded = 'true';
-        }
-        if (nextButton && !nextButton.dataset.listenerAdded) {
-            nextButton.addEventListener('click', () => plusSlides(1));
-            nextButton.dataset.listenerAdded = 'true';
-        }
-
-        showSlides(slideIndex);
-    }
+                </div>
+            </div>`;
+        dots.innerHTML += `<span class="dot" onclick="currentSlide(${i + 1})"></span>`;
+    });
+    document.querySelector('.prev')?.addEventListener('click', () => plusSlides(-1));
+    document.querySelector('.next')?.addEventListener('click', () => plusSlides(1));
+    showSlides(slideIndex);
 }
 
 function plusSlides(n) { showSlides(slideIndex += n); }
 function currentSlide(n) { showSlides(slideIndex = n); }
 function showSlides(n) {
-    let slides = document.getElementsByClassName("testimonial-item");
-    let dots = document.getElementsByClassName("dot");
-    if (n > slides.length) { slideIndex = 1 }
-    if (n < 1) { slideIndex = slides.length }
-    for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
-    for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
-    slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].className += " active";
+    let s = document.getElementsByClassName("testimonial-item");
+    let d = document.getElementsByClassName("dot");
+    if (!s.length) return;
+    if (n > s.length) slideIndex = 1;
+    if (n < 1) slideIndex = s.length;
+    for (let i = 0; i < s.length; i++) s[i].style.display = "none";
+    for (let i = 0; i < d.length; i++) d[i].className = d[i].className.replace(" active", "");
+    s[slideIndex-1].style.display = "block";
+    if (d[slideIndex-1]) d[slideIndex-1].className += " active";
 }
 
 async function loadPopup() {
-    const settings = await fetchData("getPengaturan");
-    if (settings.PopupStatus === 'ON' && settings.PopupImageURL) {
-        const popupHTML = `
+    const s = await fetchData("getPengaturan");
+    if (s.PopupStatus === 'ON' && s.PopupImageURL) {
+        document.body.insertAdjacentHTML('beforeend', `
             <div class="popup-overlay" id="popupOverlay">
                 <div class="popup-content">
-                    <span class="popup-close" id="popupClose">&times;</span>
-                    <a href="${settings.PopupLinkURL || '#'}" target="_blank">
-                        <img src="${settings.PopupImageURL}" alt="Announcement">
-                    </a>
+                    <span class="popup-close" id="popupClose">×</span>
+                    <a href="${s.PopupLinkURL || '#'}" target="_blank"><img src="${s.PopupImageURL}"></a>
                 </div>
-            </div>`;
-        document.body.insertAdjacentHTML('beforeend', popupHTML);
-        document.getElementById('popupClose').addEventListener('click', () => document.getElementById('popupOverlay').remove());
-        document.getElementById('popupOverlay').addEventListener('click', (event) => {
-            if (event.target === document.getElementById('popupOverlay')) {
-                document.getElementById('popupOverlay').remove();
-            }
-        });
+            </div>`);
+        document.getElementById('popupClose').onclick = () => document.getElementById('popupOverlay').remove();
     }
 }
 
 function searchData() {
-    const query = document.getElementById('searchInput').value;
-    if (query.length < 3) {
-        alert("Masukkan minimal 3 karakter untuk pencarian.");
-        return;
-    }
-
-    const resultsContainer = document.getElementById('search-results-container');
-    const initialContent = document.getElementById('initial-content');
-    const tableBody = document.querySelector('#resultsTable tbody');
-
-    tableBody.innerHTML = '<tr><td colspan="3">Mencari...</td></tr>';
-    resultsContainer.classList.remove('hidden');
-    initialContent.style.display = 'none';
-
-    fetch(`${SCRIPT_URL}?action=search&query=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            tableBody.innerHTML = '';
-            if (data.length > 0) {
-                data.forEach(item => {
-                    const row = `
-                        <tr>
-                            <td>${item.nama_lengkap}</td>
-                            <td>${item.nama_training}</td>
-                            <td><a href="detail.html?id=${item.id_peserta}" class="detail-btn">Lihat Detail</a></td>
-                        </tr>`;
-                    tableBody.innerHTML += row;
-                });
-            } else {
-                tableBody.innerHTML = '<tr><td colspan="3">Data tidak ditemukan.</td></tr>';
-            }
-        })
-        .catch(error => {
-            console.error('Error during search:', error);
-            tableBody.innerHTML = '<tr><td colspan="3">Terjadi kesalahan saat mencari.</td></tr>';
-        });
-}
-
-function loadParticipantDetails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const participantId = urlParams.get('id');
-    const container = document.getElementById('participant-details-container');
-
-    if (!participantId) {
-        container.innerHTML = '<p>ID Peserta tidak valid.</p>';
-        return;
-    }
-    
-    container.innerHTML = '<p>Memuat detail peserta...</p>';
-
-    fetch(`${SCRIPT_URL}?action=getParticipantDetails&id=${participantId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                container.innerHTML = `<p>${data.error}</p>`;
-                return;
-            }
-
-            let content = `
-                <div class="participant-header">
-                    <img src="${data.url_foto_profil}" alt="Foto Profil">
-                    <div class="participant-info">
-                        <h2>${data.nama_lengkap}</h2>
-                        <div class="participant-contact">
-                            ${data.email && data.email !== 'N/A' ? `<p><strong>Email:</strong> ${data.email}</p>` : ''}
-                            ${data.telepon && data.telepon !== 'N/A' ? `<p><strong>Telepon:</strong> ${data.telepon}</p>` : ''}
-                        </div>
-                    </div>
-                </div>`;
-
-            data.trainings.forEach((training, index) => {
-                content += `
-                    <div class="training-container">
-                        <h3>Data Training ${index + 1}: ${training.nama_training}</h3>
-                        <p><strong>Kode Sertifikat:</strong> ${training.kode_sertifikat}</p>
-                        <h4>Dokumentasi Foto:</h4>
-                        <div class="documentation-photos">
-                            ${training.dokumentasi.map(url => `<img src="${url}" alt="Dokumentasi">`).join('')}
-                        </div>
-                        <div class="pdf-preview">
-                            <h4>Sertifikat (PDF):</h4>
-                            <iframe src="${training.url_pdf}" height="400"></iframe>
-                            <a href="${training.url_pdf}" target="_blank">Download/Lihat Fullscreen</a>
-                        </div>
-                    </div>`;
+    const q = document.getElementById('searchInput').value;
+    if (q.length < 3) return alert("Min 3 karakter");
+    const resCon = document.getElementById('search-results-container');
+    const iniCon = document.getElementById('initial-content');
+    const body = document.querySelector('#resultsTable tbody');
+    body.innerHTML = '<tr><td colspan="3">Mencari...</td></tr>';
+    resCon.classList.remove('hidden'); iniCon.style.display = 'none';
+    fetch(`${SCRIPT_URL}?action=search&query=${encodeURIComponent(q)}`)
+        .then(r => r.json()).then(data => {
+            body.innerHTML = '';
+            data.forEach(item => {
+                body.innerHTML += `<tr><td>${item.nama_lengkap}</td><td>${item.nama_training}</td><td><a href="detail.html?id=${item.id_peserta}" class="detail-btn">Detail</a></td></tr>`;
             });
-            container.innerHTML = content;
-        })
-        .catch(error => {
-            console.error('Error fetching participant details:', error);
-            container.innerHTML = '<p>Gagal memuat detail peserta.</p>';
+            if(!data.length) body.innerHTML = '<tr><td colspan="3">Tidak ditemukan</td></tr>';
         });
-}
-
-function filterItems() {
-    const query = this.value.toLowerCase();
-    const containerId = this.id === 'trainingSearchInput' ? '#allTrainingPage' : '#allNewsPage';
-    const items = document.querySelectorAll(`${containerId} [data-title]`);
-    
-    items.forEach(item => {
-        if (item.dataset.title.includes(query)) {
-            item.style.display = 'flex'; 
-        } else {
-            item.style.display = 'none';
-        }
-    });
 }
 
 function injectFooter() {
-    const footerHTML = `
-    <div class="footer-content">
-        <div class="footer-section about">
-            <h4>Informasi Kontak</h4>
-            <p><strong>Alamat:</strong> Ruko gardenia, Blk. RF, Jl. Gardenia Raya No.09, RT.005/RW.002, Bojong Rawalumbu, Rawa Lumbu, Bekasi, West Java 17116</p>
-            <p><strong>Email:</strong>sales@proworker.co.id</p>
-            <p><strong>Telepon:</strong> +62 857 9775 7809</p>
-        </div>
-        <div class="footer-section links">
-            <h4>Hubungi Whatsapp Kami</h4>
-            <a href="https://wa.me/6287779104041?text=Halo,%20saya%20tertarik%20dengan%20training%20Anda." class="whatsapp-btn" target="_blank">Hubungi via WhatsApp</a>
-        </div>
-    </div>`;
-    const footers = document.querySelectorAll('footer');
-    footers.forEach(footer => {
-        footer.innerHTML = footerHTML;
-    });
+    const f = document.querySelector('footer');
+    if(f) f.innerHTML = `<div class="footer-content"><p>Ruko gardenia, Bekasi | sales@proworker.co.id</p><a href="https://wa.me/6287779104041" class="whatsapp-btn" target="_blank">WhatsApp</a></div>`;
 }
 
+// Detail Page Loaders
 async function loadDetailBerita(id) {
-    const container = document.getElementById('detail-page-content');
-    container.innerHTML = "<p>Memuat berita...</p>";
-    const data = await fetchData(`getDetailBerita&id=${id}`);
-
-    if (data.error) {
-        container.innerHTML = `<p>${data.error}</p>`;
-        return;
-    }
-    
-    const article = data.main;
-    const recommendations = data.recommendations;
-    const tgl = new Date(article.tanggalpublikasi).toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' });
-
-    let contentHTML = `
-        <div class="detail-buttons">
-            <a href="index.html" class="btn-back">&larr; Kembali</a>
-            <a href="news.html" class="btn-see-others">Lihat Berita Lainnya &rarr;</a>
-        </div>
-        <div class="detail-header">
-            <h1>${article.judulberita}</h1>
-            <p class="detail-meta">Oleh ${article.author} | Dipublikasikan ${tgl}</p>
-        </div>
-        <img src="${article.url_gambar_1}" alt="${article.judulberita}" class="full-width-img">
-        <div class="detail-content">
-            <p>${(article.teks_1 || '').replace(/\n/g, '<br>')}</p>
-    `;
-
-    // DITAMBAHKAN: Cek jika data untuk bagian 2 ada
-    if (article.url_gambar_2 && article.teks_2) {
-        contentHTML += `
-            <div class="split-section">
-                <div class="image-content">
-                    <img src="${article.url_gambar_2}" alt="Ilustrasi 2">
-                </div>
-                <div class="text-content">
-                    <p>${article.teks_2.replace(/\n/g, '<br>')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    // DITAMBAHKAN: Cek jika data untuk bagian 3 ada
-    if (article.url_gambar_3 && article.teks_3) {
-        contentHTML += `
-            <div class="split-section reverse">
-                <div class="image-content">
-                     <img src="${article.url_gambar_3}" alt="Ilustrasi 3">
-                </div>
-                <div class="text-content">
-                    <p>${article.teks_3.replace(/\n/g, '<br>')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    contentHTML += `</div>`; // Penutup div.detail-content
-    
-    // ... (sisa kode untuk rekomendasi tidak berubah) ...
-    if(recommendations.length > 0) {
-        contentHTML += `<div class="recommendations"><h3>Berita Lainnya</h3><div class="cards-container">`;
-        recommendations.forEach(rec => {
-            contentHTML += `
-                <div class="card" onclick="window.location.href='detail-berita.html?id=${rec.id_berita}'">
-                   <img src="${rec.thumbnail}" alt="${rec.judulberita}">
-                   <div class="card-content">
-                        <h3>${rec.judulberita}</h3>
-                   </div>
-                </div>
-            `;
-        });
-        contentHTML += `</div></div>`;
-    }
-
-    container.innerHTML = contentHTML;
-    injectFooter();
+    const con = document.getElementById('detail-page-content');
+    const d = await fetchData(`getDetailBerita&id=${id}`);
+    if (d.error) return con.innerHTML = d.error;
+    con.innerHTML = `<h1>${d.main.judulberita}</h1><img src="${d.main.url_gambar_1}" class="full-width-img"><p>${d.main.teks_1}</p>`;
 }
 
 async function loadDetailTraining(id) {
-    const container = document.getElementById('detail-page-content');
-    container.innerHTML = "<p>Memuat detail training...</p>";
-    const data = await fetchData(`getDetailTraining&id=${id}`);
-
-    if (data.error) {
-        container.innerHTML = `<p>${data.error}</p>`;
-        return;
-    }
-    
-    const article = data.main;
-    const recommendations = data.recommendations;
-
-    let contentHTML = `
-        <div class="detail-buttons">
-            <a href="index.html" class="btn-back">&larr; Kembali</a>
-            <a href="trainings.html" class="btn-see-others">Lihat Training Lainnya &rarr;</a>
-        </div>
-        <div class="detail-header">
-            <h1>${article.judultraining}</h1>
-        </div>
-        <img src="${article.url_gambar_1}" alt="${article.judultraining}" class="full-width-img">
-        <div class="detail-content">
-            <p>${(article.teks_1 || '').replace(/\n/g, '<br>')}</p>
-    `;
-
-    // DITAMBAHKAN: Cek jika data untuk bagian 2 ada
-    if (article.url_gambar_2 && article.teks_2) {
-        contentHTML += `
-            <div class="split-section">
-                <div class="image-content">
-                    <img src="${article.url_gambar_2}" alt="Ilustrasi 2">
-                </div>
-                <div class="text-content">
-                    <p>${article.teks_2.replace(/\n/g, '<br>')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    // DITAMBAHKAN: Cek jika data untuk bagian 3 ada
-    if (article.url_gambar_3 && article.teks_3) {
-        contentHTML += `
-            <div class="split-section reverse">
-                <div class="image-content">
-                     <img src="${article.url_gambar_3}" alt="Ilustrasi 3">
-                </div>
-                <div class="text-content">
-                    <p>${article.teks_3.replace(/\n/g, '<br>')}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    contentHTML += `</div>`; // Penutup div.detail-content
-
-    // ... (sisa kode untuk rekomendasi tidak berubah) ...
-    if(recommendations.length > 0) {
-        contentHTML += `<div class="recommendations"><h3>Training Lainnya</h3><div class="cards-container">`;
-        recommendations.forEach(rec => {
-            contentHTML += `
-                <div class="card" onclick="window.location.href='detail-training.html?id=${rec.id_training}'">
-                   <img src="${rec.thumbnail}" alt="${rec.judultraining}">
-                   <div class="card-content">
-                        <h3>${rec.judultraining}</h3>
-                   </div>
-                </div>
-            `;
-        });
-        contentHTML += `</div></div>`;
-    }
-
-    container.innerHTML = contentHTML;
-    injectFooter();
+    const con = document.getElementById('detail-page-content');
+    const d = await fetchData(`getDetailTraining&id=${id}`);
+    if (d.error) return con.innerHTML = d.error;
+    con.innerHTML = `<h1>${d.main.judultraining}</h1><img src="${d.main.url_gambar_1}" class="full-width-img"><p>${d.main.teks_1}</p>`;
 }
